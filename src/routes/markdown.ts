@@ -6,6 +6,8 @@ import { cleanContent } from '../transform/clean-html';
 import { renderArticleMarkdown, renderIndexMarkdown } from '../transform/markdown-template';
 import { markdownResponse } from '../http/response';
 import type { Env } from '../env';
+import type { NormalizedArticle } from '../core/types';
+import type { FetchJsonResult } from '../source/fetch-json';
 
 type RouteKind =
   | { kind: 'index' }
@@ -50,10 +52,10 @@ export async function markdownRoute(request: Request, env: Env): Promise<Respons
   }
 
   const publicBaseUrl = resolvePublicBaseUrl(request, env);
-  const upstream = await fetchJson<Record<string, unknown>>(env, env.UPSTREAM_ARTICLES_PATH);
-  const raw = upstream.data;
 
   if (route.kind === 'index') {
+    const upstream = await fetchJson<Record<string, unknown>>(env, env.UPSTREAM_ARTICLES_PATH);
+    const raw = upstream.data;
     const list = normalizeWorkshopList(raw, publicBaseUrl, env.UPSTREAM_BASE_URL);
     const rendered = renderIndexMarkdown(list);
     const etag = computeEtag([pathname, env.RENDERER_VERSION, String(list.length)]);
@@ -68,20 +70,23 @@ export async function markdownRoute(request: Request, env: Env): Promise<Respons
     return response;
   }
 
-  const articles = extractArticles(raw);
   const refSlug = normalizeArticleRef(route.ref);
-  let article = findArticleByRef(articles, refSlug, publicBaseUrl, env.UPSTREAM_BASE_URL);
-  let articleSource = upstream;
-  if (!article) {
-    try {
-      const single = await fetchJson<Record<string, unknown>>(env, `/wiki/articles/${refSlug}.json`);
-      article = normalizeWorkshopSingleArticle(single.data, publicBaseUrl, env.UPSTREAM_BASE_URL);
-      articleSource = single;
-    } catch (error) {
-      if (!(error instanceof HttpError) || error.status !== 404) {
-        throw error;
-      }
+  let article: NormalizedArticle | undefined;
+  let articleSource: FetchJsonResult<Record<string, unknown>>;
+  try {
+    const single = await fetchJson<Record<string, unknown>>(env, `/wiki/articles/${refSlug}.json`);
+    article = normalizeWorkshopSingleArticle(single.data, publicBaseUrl, env.UPSTREAM_BASE_URL);
+    articleSource = single;
+  } catch (error) {
+    if (!(error instanceof HttpError) || error.status !== 404) {
+      throw error;
     }
+
+    const upstream = await fetchJson<Record<string, unknown>>(env, env.UPSTREAM_ARTICLES_PATH);
+    const raw = upstream.data;
+    const articles = extractArticles(raw);
+    article = findArticleByRef(articles, refSlug, publicBaseUrl, env.UPSTREAM_BASE_URL);
+    articleSource = upstream;
   }
   if (!article) {
     throw new HttpError(404, 'Article Not Found');

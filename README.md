@@ -34,7 +34,7 @@ curl https://<your-worker-domain>/wiki/articles/hero-color-reference-table \
 ## Output Behavior
 
 - Responses are served as Markdown (`text/markdown; charset=utf-8`) on markdown routes and markdown-negotiated article routes.
-- Article routes fall back to `/wiki/articles/:slug.json` when a slug is missing from `/wiki/articles.json`; index rendering remains list-only.
+- Article routes first try `/wiki/articles/:slug.json`; only on 404 they fall back to `/wiki/articles.json`. Index rendering remains list-only.
 - Article output includes YAML front matter with core metadata.
 - Body conversion uses minimal cleaning only.
 - Existing markdown structures (such as headings, code blocks, tables, and lists) are preserved.
