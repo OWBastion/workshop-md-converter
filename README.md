@@ -20,6 +20,24 @@ pnpm test
 pnpm run dev
 ```
 
+## CI/CD Deployment
+
+GitHub Actions automatically deploys to Cloudflare when code is pushed to `main`.
+
+Workflow gates:
+
+- `pnpm test`
+- `pnpm run build`
+- `pnpm run deploy`
+
+Required GitHub repository secrets:
+
+- `CLOUDFLARE_API_TOKEN` (required)
+- `CLOUDFLARE_ACCOUNT_ID` (recommended)
+
+If deployment fails, check the workflow logs in GitHub Actions:
+`Actions -> Deploy to Cloudflare -> latest run`.
+
 ## Environment
 
 Configured via `wrangler.jsonc` vars:
