@@ -52,7 +52,7 @@ Configured via `wrangler.jsonc` vars:
 
 - JSON endpoints like `/wiki/articles.json` are bypassed and keep upstream behavior.
 - Unknown upstream fields are preserved in `extra` during normalization.
-- URI strategy is `slug-only`; id-based article paths return Markdown 404.
+- URI strategy is `slug-only`.
 - All Workshop article links are normalized to proxy `.md` URLs.
 
 ## Route Contract (Slug-Only)
@@ -60,10 +60,7 @@ Configured via `wrangler.jsonc` vars:
 - Supported article routes:
   - `GET /wiki/articles/:slug.md`
   - `GET /wiki/articles/:slug` with `Accept: text/markdown`
-- Numeric id article routes are not supported and must return Markdown 404:
-  - `GET /wiki/articles/8507.md` must return Markdown 404.
-  - `GET /wiki/articles/8507` with `Accept: text/markdown` must return Markdown 404.
-- `Source` metadata always uses canonical slug-based workshop links (`/wiki/articles/:slug`) to avoid id-link fallback.
+- `Source` metadata always uses canonical slug-based workshop links (`/wiki/articles/:slug`).
 
 ## License & Content Ownership
 

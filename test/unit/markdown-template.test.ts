@@ -18,11 +18,10 @@ const article: NormalizedArticle = {
 };
 
 describe('markdown-template', () => {
-  it('builds front matter without legacy id fields', () => {
+  it('builds front matter with the canonical schema', () => {
     const fm = buildFrontMatter(article);
     expect(fm).toContain('title: Hero Color Reference Table');
     expect(fm).toContain('content_type: wiki-article');
-    expect(fm).not.toContain('article_id');
   });
 
   it('renders article markdown', () => {

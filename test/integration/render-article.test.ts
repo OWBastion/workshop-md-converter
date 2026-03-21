@@ -40,11 +40,10 @@ describe('render article integration', () => {
     expect(text).toContain('> Source: https://workshop.codes/wiki/articles/hero-color-reference-table');
     expect(text).toContain('[absolute](https://md.example/wiki/articles/destroy-effect.md)');
     expect(text).not.toContain('> Notice:');
-    expect(text).not.toContain('article_id:');
     expect(text).not.toContain('<script');
   });
 
-  it('returns markdown 404 for id-based article request', async () => {
+  it('returns markdown 404 for unknown slug article request', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn(async (input: RequestInfo | URL) => {
@@ -59,7 +58,7 @@ describe('render article integration', () => {
       }),
     );
 
-    const req = new Request('https://worker.test/wiki/articles/8507.md', {
+    const req = new Request('https://worker.test/wiki/articles/unknown-article.md', {
       headers: { accept: 'text/markdown' },
     });
 

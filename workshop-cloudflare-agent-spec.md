@@ -343,8 +343,6 @@ GET /wiki/articles/:slug
 
 - `GET /wiki/articles/hero-color-reference-table.md` -> 返回单篇 Markdown
 - `GET /wiki/articles/hero-color-reference-table` + `Accept: text/markdown` -> 返回单篇 Markdown
-- `GET /wiki/articles/8507.md` -> 返回 Markdown 404
-- `GET /wiki/articles/8507` + `Accept: text/markdown` -> 返回 Markdown 404
 - `GET /wiki/articles.json` -> 仍返回 JSON
 
 ---
@@ -696,7 +694,7 @@ export interface ArticleRenderer {
 
 - 拉取 JSON
 - 解析列表
-- 按 slug 定位文章（id 路径请求直接 404）
+- 按 slug 定位文章
 - 映射为 `NormalizedArticle`
 
 #### Step 5
@@ -732,8 +730,6 @@ export interface ArticleRenderer {
 
 - `curl /wiki/articles/hero-color-reference-table.md` 返回 `text/markdown`
 - `curl /wiki/articles/hero-color-reference-table -H 'Accept: text/markdown'` 返回 Markdown
-- `curl /wiki/articles/8507.md` 返回 Markdown 404
-- `curl /wiki/articles/8507 -H 'Accept: text/markdown'` 返回 Markdown 404
 - front matter 完整
 - 原始代码块未损坏
 - 样式标签被剔除

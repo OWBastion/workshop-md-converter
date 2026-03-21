@@ -25,10 +25,6 @@ export function resolveMarkdownRoute(pathname: string): RouteKind {
   return { kind: 'none' };
 }
 
-function isIdLikeRef(ref: string): boolean {
-  return /^\d+$/.test(ref);
-}
-
 function resolvePublicBaseUrl(request: Request, env: Env): string {
   if (env.PUBLIC_BASE_URL && env.PUBLIC_BASE_URL.trim()) {
     return env.PUBLIC_BASE_URL;
@@ -51,10 +47,6 @@ export async function markdownRoute(request: Request, env: Env): Promise<Respons
   const route = resolveMarkdownRoute(pathname);
   if (route.kind === 'none') {
     throw new HttpError(404, 'Markdown route not found');
-  }
-
-  if (route.kind === 'article' && isIdLikeRef(route.ref)) {
-    throw new HttpError(404, 'Article Not Found');
   }
 
   const publicBaseUrl = resolvePublicBaseUrl(request, env);

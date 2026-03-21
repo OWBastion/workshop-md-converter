@@ -63,9 +63,6 @@ export function normalizeWorkshopArticle(
   const sourceUrl = toSourceArticleUrl(upstreamBaseUrl, slug);
 
   const known = new Set([
-    'id',
-    'article_id',
-    'articleId',
     'title',
     'name',
     'slug',

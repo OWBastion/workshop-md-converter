@@ -14,33 +14,14 @@ fail=0
 
 echo "Checking slug-only route contract in docs..."
 
-while IFS= read -r hit; do
-  [[ -z "${hit}" ]] && continue
-
-  file="${hit%%:*}"
-  rest="${hit#*:}"
-  line="${rest%%:*}"
-  text="${rest#*:}"
-
-  if ! echo "${text}" | grep -Eiq '404|not found|not supported|must return|returns markdown 404|返回 markdown 404|不可访问|禁止|never document|must be explicitly'; then
-    echo "Id placeholder route must be explicit negative case: ${file}:${line}:${text}"
-    fail=1
-  fi
-done < <(grep -nE '/wiki/articles/:id(\.md)?|GET[[:space:]]+/wiki/articles/:id(\.md)?' "${FILES[@]}" || true)
-
-while IFS= read -r hit; do
-  [[ -z "${hit}" ]] && continue
-
-  file="${hit%%:*}"
-  rest="${hit#*:}"
-  line="${rest%%:*}"
-  text="${rest#*:}"
-
-  if ! echo "${text}" | grep -Eiq '404|not found|not supported|must return|returns markdown 404|返回 markdown 404|不可访问|禁止'; then
-    echo "Numeric article route mention must be explicit 404 case: ${file}:${line}:${text}"
-    fail=1
-  fi
-done < <(grep -nE '/wiki/articles/[0-9]+(\.md)?' "${FILES[@]}" || true)
+forbidden_hits="$(
+  grep -nE '/wiki/articles/:id(\.md)?|GET[[:space:]]+/wiki/articles/:id(\.md)?|/wiki/articles/[0-9]+(\.md)?|id-based|numeric id|article_id' "${FILES[@]}" || true
+)"
+if [[ -n "${forbidden_hits}" ]]; then
+  echo "Found forbidden id semantics in docs:"
+  echo "${forbidden_hits}"
+  fail=1
+fi
 
 if [[ "${fail}" -ne 0 ]]; then
   echo "Slug-only docs check failed."
