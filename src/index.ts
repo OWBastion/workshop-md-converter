@@ -5,6 +5,7 @@ import { negotiateMarkdown } from './http/negotiate';
 import { buildCacheKey } from './http/cache-key';
 import { isJsonBypass } from './routes/api';
 import { healthRoute } from './routes/health';
+import { homeRoute } from './routes/home';
 import { markdownErrorResponse, markdownRoute, resolveMarkdownRoute } from './routes/markdown';
 
 export default {
@@ -14,6 +15,9 @@ export default {
 
     const health = healthRoute(url.pathname);
     if (health) return health;
+
+    const home = homeRoute(url.pathname, env);
+    if (home) return home;
 
     if (isJsonBypass(url.pathname)) {
       return fetch(request);

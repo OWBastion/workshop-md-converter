@@ -8,6 +8,7 @@ This service provides Markdown-first wiki access with predictable routes and con
 
 ## Available Endpoints
 
+- `GET /` (Markdown onboarding guide)
 - `GET /healthz`
 - `GET /wiki/articles.md`
 - `GET /wiki/articles/:slug.md`
@@ -16,6 +17,9 @@ This service provides Markdown-first wiki access with predictable routes and con
 ## Quick Usage
 
 ```bash
+# Root onboarding guide
+curl https://<your-worker-domain>/
+
 # Article index as markdown
 curl https://<your-worker-domain>/wiki/articles.md
 

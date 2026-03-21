@@ -4,6 +4,37 @@ import fixture from '../fixtures/article.sample.json';
 import expectedMarkdown from '../fixtures/article.expected.md?raw';
 
 describe('render article integration', () => {
+  it('renders root onboarding guide as markdown without upstream fetch', async () => {
+    const fetchMock = vi.fn(async () => new Response('ok'));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const req = new Request('https://worker.test/', {
+      headers: { accept: 'text/html' },
+    });
+
+    const env = {
+      UPSTREAM_BASE_URL: 'https://workshop.codes',
+      UPSTREAM_ARTICLES_PATH: '/wiki/articles.json',
+      RENDERER_VERSION: 'v1',
+      CACHE_TTL_SECONDS: '300',
+    };
+
+    const res = await worker.fetch(req, env as never);
+    const text = await res.text();
+
+    expect(res.status).toBe(200);
+    expect(res.headers.get('content-type')).toContain('text/markdown');
+    expect(res.headers.get('cache-control')).toContain('max-age=300');
+    expect(res.headers.get('vary')).toContain('Accept');
+    expect(Number(res.headers.get('x-markdown-tokens'))).toBeGreaterThan(0);
+    expect(text).toContain('title: Workshop Markdown Converter Guide');
+    expect(text).toContain('# Workshop Markdown Converter');
+    expect(text).toContain('Start here: `/wiki/articles.md`');
+    expect(text).toContain('curl https://<your-worker-domain>/wiki/articles.md');
+    expect(text).toContain('Accept: text/markdown');
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it('returns markdown 406 for article route without .md when markdown is not accepted', async () => {
     const fetchMock = vi.fn(async () => new Response('ok'));
     vi.stubGlobal('fetch', fetchMock);
