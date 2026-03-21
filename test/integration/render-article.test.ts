@@ -4,6 +4,56 @@ import fixture from '../fixtures/article.sample.json';
 import expectedMarkdown from '../fixtures/article.expected.md?raw';
 
 describe('render article integration', () => {
+  it('returns markdown 406 for article route without .md when markdown is not accepted', async () => {
+    const fetchMock = vi.fn(async () => new Response('ok'));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const req = new Request('https://worker.test/wiki/articles/hero-color-reference-table', {
+      headers: { accept: 'text/html' },
+    });
+
+    const env = {
+      UPSTREAM_BASE_URL: 'https://workshop.codes',
+      UPSTREAM_ARTICLES_PATH: '/wiki/articles.json',
+      RENDERER_VERSION: 'v1',
+      CACHE_TTL_SECONDS: '300',
+    };
+
+    const res = await worker.fetch(req, env as never);
+    const text = await res.text();
+
+    expect(res.status).toBe(406);
+    expect(res.headers.get('content-type')).toContain('text/markdown');
+    expect(text).toContain('title: Not Acceptable');
+    expect(text).toContain('# Not Acceptable');
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('returns markdown 406 for index route without .md when markdown is not accepted', async () => {
+    const fetchMock = vi.fn(async () => new Response('ok'));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const req = new Request('https://worker.test/wiki/articles', {
+      headers: { accept: 'text/html' },
+    });
+
+    const env = {
+      UPSTREAM_BASE_URL: 'https://workshop.codes',
+      UPSTREAM_ARTICLES_PATH: '/wiki/articles.json',
+      RENDERER_VERSION: 'v1',
+      CACHE_TTL_SECONDS: '300',
+    };
+
+    const res = await worker.fetch(req, env as never);
+    const text = await res.text();
+
+    expect(res.status).toBe(406);
+    expect(res.headers.get('content-type')).toContain('text/markdown');
+    expect(text).toContain('title: Not Acceptable');
+    expect(text).toContain('# Not Acceptable');
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it('renders article markdown with PUBLIC_BASE_URL', async () => {
     vi.stubGlobal(
       'fetch',

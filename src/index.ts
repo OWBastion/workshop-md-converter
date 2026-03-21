@@ -5,7 +5,7 @@ import { negotiateMarkdown } from './http/negotiate';
 import { buildCacheKey } from './http/cache-key';
 import { isJsonBypass } from './routes/api';
 import { healthRoute } from './routes/health';
-import { markdownErrorResponse, markdownRoute } from './routes/markdown';
+import { markdownErrorResponse, markdownRoute, resolveMarkdownRoute } from './routes/markdown';
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
@@ -19,8 +19,19 @@ export default {
       return fetch(request);
     }
 
+    const route = resolveMarkdownRoute(url.pathname);
     const wantsMarkdown = negotiateMarkdown(request, url.pathname);
-    if (!wantsMarkdown) {
+
+    if (route.kind !== 'none' && !wantsMarkdown) {
+      return markdownErrorResponse(
+        406,
+        'Not Acceptable',
+        'This route requires a .md URL or Accept: text/markdown',
+        env,
+      );
+    }
+
+    if (route.kind === 'none' && !wantsMarkdown) {
       return fetch(request);
     }
 
