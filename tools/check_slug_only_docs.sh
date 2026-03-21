@@ -6,7 +6,6 @@ shopt -s nullglob
 FILES=(
   "README.md"
   "AGENTS.md"
-  "workshop-cloudflare-agent-spec.md"
   "docs/"*.md
 )
 

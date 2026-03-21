@@ -32,9 +32,12 @@ export default {
       logRequest({
         traceId,
         route: url.pathname,
+        upstreamUrl: response.headers.get('x-upstream-url') ?? undefined,
+        articleSlug: response.headers.get('x-article-slug') ?? undefined,
         status: response.status,
         cacheStatus: 'miss',
         transformMs: Date.now() - startedAt,
+        bytesIn: Number(response.headers.get('x-upstream-bytes') ?? 0),
         bytesOut: Number(response.headers.get('content-length') ?? 0),
         tokenEstimate: Number(response.headers.get('x-markdown-tokens') ?? 0),
         rendererVersion: env.RENDERER_VERSION,

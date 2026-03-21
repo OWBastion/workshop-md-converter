@@ -2,7 +2,13 @@ import { DEFAULT_TIMEOUT_MS, MAX_UPSTREAM_BYTES, normalizeUpstreamUrl } from '..
 import { HttpError } from '../core/errors';
 import type { Env } from '../env';
 
-export async function fetchJson<T>(env: Env, path: string): Promise<T> {
+export interface FetchJsonResult<T> {
+  data: T;
+  bytesIn: number;
+  upstreamUrl: string;
+}
+
+export async function fetchJson<T>(env: Env, path: string): Promise<FetchJsonResult<T>> {
   const base = normalizeUpstreamUrl(env);
   const url = new URL(path, base);
 
@@ -26,7 +32,11 @@ export async function fetchJson<T>(env: Env, path: string): Promise<T> {
       throw new HttpError(502, 'Upstream payload too large');
     }
 
-    return JSON.parse(text) as T;
+    return {
+      data: JSON.parse(text) as T,
+      bytesIn: text.length,
+      upstreamUrl: url.toString(),
+    };
   } catch (error) {
     if (error instanceof HttpError) throw error;
     throw new HttpError(502, 'Failed to fetch upstream JSON');

@@ -1,6 +1,8 @@
 export interface LogContext {
   traceId: string;
   route: string;
+  upstreamUrl?: string;
+  articleSlug?: string;
   status: number;
   cacheStatus?: string;
   transformMs?: number;

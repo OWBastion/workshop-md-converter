@@ -14,6 +14,10 @@ export function stripStyleTags(input: string): string {
     .replace(/<span\b[^>]*>\s*<\/span>/gi, '');
 }
 
+function normalizeWhitespace(input: string): string {
+  return input.replace(/\n{3,}/g, '\n\n').replace(/([^\n])\n(#{1,6}\s)/g, '$1\n\n$2').trim();
+}
+
 function mapSafeTags(input: string): string {
   const { document } = parseHTML(`<div id="root">${input}</div>`);
   const root = document.getElementById('root');
@@ -43,16 +47,12 @@ function mapSafeTags(input: string): string {
     br.replaceWith(document.createTextNode('\n\n'));
   }
 
-  return root.innerHTML
-    .replace(/<[^>]+>/g, '')
-    .replace(/\n{3,}/g, '\n\n')
-    .replace(/([^\n])\n(#{1,6}\s)/g, '$1\n\n$2')
-    .trim();
+  return normalizeWhitespace(root.innerHTML);
 }
 
 export function cleanContent(input: string, publicBaseUrl: string): string {
   const decoded = decodeEntities(input);
   const stripped = stripStyleTags(decoded);
   const mapped = mapSafeTags(stripped);
-  return normalizeLinks(mapped, publicBaseUrl);
+  return normalizeWhitespace(normalizeLinks(mapped, publicBaseUrl));
 }

@@ -1,6 +1,9 @@
 # Technical Spec Snapshot
 
-Primary specification source: `workshop-cloudflare-agent-spec.md`.
+Primary specification sources:
+- `README.md`
+- `docs/ADR-001-architecture.md`
+- this `docs/TECH-SPEC.md` snapshot
 
 This repository implements V1 scope:
 - `/wiki/articles.md`

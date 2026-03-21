@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import worker from '../../src/index';
 import fixture from '../fixtures/article.sample.json';
+import expectedMarkdown from '../fixtures/article.expected.md?raw';
 
 describe('render article integration', () => {
   it('renders article markdown with PUBLIC_BASE_URL', async () => {
@@ -36,9 +37,9 @@ describe('render article integration', () => {
     expect(res.status).toBe(200);
     expect(res.headers.get('content-type')).toContain('text/markdown');
     expect(res.headers.get('vary')).toContain('Accept');
-    expect(text).toContain('url: https://md.example/wiki/articles/hero-color-reference-table.md');
-    expect(text).toContain('> Source: https://workshop.codes/wiki/articles/hero-color-reference-table');
-    expect(text).toContain('[absolute](https://md.example/wiki/articles/destroy-effect.md)');
+    expect(text).toBe(expectedMarkdown);
+    expect(text).toContain('```ts\nconsole.log(\'ok\')\n```');
+    expect(text).toContain('<table><tr><td>A</td></tr></table>');
     expect(text).not.toContain('> Notice:');
     expect(text).not.toContain('<script');
   });

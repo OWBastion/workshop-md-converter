@@ -33,4 +33,4 @@ content_type: wiki-article
 console.log('ok')
 ```
 
-A
+<table><tr><td>A</td></tr></table>

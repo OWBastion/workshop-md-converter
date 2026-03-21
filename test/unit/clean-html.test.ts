@@ -21,4 +21,11 @@ describe('clean-html', () => {
     expect(out).toContain('[relative](https://md.example/wiki/articles/destroy-effect.md)');
     expect(out).toContain('[absolute](https://md.example/wiki/articles/abc.md?x=1#h)');
   });
+
+  it('preserves table markup while removing unsafe tags', () => {
+    const input = '<table><tr><td>A</td></tr></table><script>alert(1)</script>';
+    const out = cleanContent(input, 'https://md.example');
+    expect(out).toContain('<table><tr><td>A</td></tr></table>');
+    expect(out).not.toContain('<script');
+  });
 });

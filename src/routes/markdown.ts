@@ -50,18 +50,22 @@ export async function markdownRoute(request: Request, env: Env): Promise<Respons
   }
 
   const publicBaseUrl = resolvePublicBaseUrl(request, env);
-  const raw = await fetchJson<Record<string, unknown>>(env, env.UPSTREAM_ARTICLES_PATH);
+  const upstream = await fetchJson<Record<string, unknown>>(env, env.UPSTREAM_ARTICLES_PATH);
+  const raw = upstream.data;
 
   if (route.kind === 'index') {
     const list = normalizeWorkshopList(raw, publicBaseUrl, env.UPSTREAM_BASE_URL);
     const rendered = renderIndexMarkdown(list);
     const etag = computeEtag([pathname, env.RENDERER_VERSION, String(list.length)]);
-    return markdownResponse({
+    const response = markdownResponse({
       markdown: rendered.markdown,
       tokens: rendered.tokens,
       etag,
       env,
     });
+    response.headers.set('x-upstream-url', upstream.upstreamUrl);
+    response.headers.set('x-upstream-bytes', String(upstream.bytesIn));
+    return response;
   }
 
   const articles = extractArticles(raw);
@@ -74,13 +78,17 @@ export async function markdownRoute(request: Request, env: Env): Promise<Respons
   const rendered = renderArticleMarkdown({ ...article, contentMarkdown: cleaned });
   const etag = computeEtag([article.slug, article.updatedAt ?? 'na', env.RENDERER_VERSION]);
 
-  return markdownResponse({
+  const response = markdownResponse({
     markdown: rendered.markdown,
     tokens: rendered.tokens,
     etag,
     lastModified: rendered.lastModified,
     env,
   });
+  response.headers.set('x-upstream-url', upstream.upstreamUrl);
+  response.headers.set('x-upstream-bytes', String(upstream.bytesIn));
+  response.headers.set('x-article-slug', article.slug);
+  return response;
 }
 
 export function markdownErrorResponse(status: number, title: string, message: string, env: Env): Response {
