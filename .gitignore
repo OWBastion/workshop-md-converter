@@ -3,3 +3,4 @@ node_modules/
 .wrangler/
 coverage/
 .DS_Store
+workshop-cloudflare-agent-spec.md
