@@ -6,7 +6,6 @@ import { cleanContent } from '../transform/clean-html';
 import { renderArticleMarkdown, renderIndexMarkdown } from '../transform/markdown-template';
 import { markdownResponse } from '../http/response';
 import type { Env } from '../env';
-import { createHash } from 'node:crypto';
 
 type RouteKind =
   | { kind: 'index' }
@@ -27,8 +26,13 @@ export function resolveMarkdownRoute(pathname: string): RouteKind {
 }
 
 function computeEtag(parts: string[]): string {
-  const hash = createHash('sha1').update(parts.join('::')).digest('hex');
-  return `"${hash}"`;
+  const input = parts.join('::');
+  let hash = 2166136261;
+  for (let i = 0; i < input.length; i += 1) {
+    hash ^= input.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return `"${(hash >>> 0).toString(16)}"`;
 }
 
 export async function markdownRoute(request: Request, env: Env): Promise<Response> {
