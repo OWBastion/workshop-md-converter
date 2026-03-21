@@ -21,8 +21,8 @@ function pickStringArray(obj: WorkshopArticleRaw, keys: string[]): string[] {
   return [];
 }
 
-function toArticleUrl(base: string, idOrSlug: string): string {
-  return new URL(`/wiki/articles/${idOrSlug}`, base).toString();
+function toArticleUrl(base: string, slug: string): string {
+  return new URL(`/wiki/articles/${slug}`, base).toString();
 }
 
 export function extractArticles(raw: WorkshopListRaw): WorkshopArticleRaw[] {
@@ -47,9 +47,8 @@ export function normalizeWorkshopArticle(raw: WorkshopArticleRaw, env: Env): Nor
   const createdAt = pickString(raw, ['created_at', 'createdAt']);
   const updatedAt = pickString(raw, ['updated_at', 'updatedAt']);
   const tags = pickStringArray(raw, ['tags', 'labels']);
-  const url =
-    pickString(raw, ['url']) ??
-    toArticleUrl(env.UPSTREAM_BASE_URL, id === 'unknown' ? slug : id);
+  // Canonical article URL is slug-based by contract.
+  const url = toArticleUrl(env.UPSTREAM_BASE_URL, slug);
 
   const known = new Set([
     'id',
@@ -97,7 +96,7 @@ export function normalizeWorkshopArticle(raw: WorkshopArticleRaw, env: Env): Nor
 export function findArticleByRef(articles: WorkshopArticleRaw[], ref: string, env: Env): NormalizedArticle | undefined {
   for (const article of articles) {
     const normalized = normalizeWorkshopArticle(article, env);
-    if (normalized.id === ref || normalized.slug === ref) {
+    if (normalized.slug === ref) {
       return normalized;
     }
   }

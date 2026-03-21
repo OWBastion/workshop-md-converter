@@ -18,7 +18,7 @@ describe('render article integration', () => {
       }),
     );
 
-    const req = new Request('https://worker.test/wiki/articles/8507.md', {
+    const req = new Request('https://worker.test/wiki/articles/hero-color-reference-table.md', {
       headers: { accept: 'text/markdown' },
     });
 
@@ -41,13 +41,13 @@ describe('render article integration', () => {
     expect(text).not.toContain('<script');
   });
 
-  it('returns markdown 404 for missing article', async () => {
+  it('returns markdown 404 for id-based article request', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn(async (input: RequestInfo | URL) => {
         const url = String(input);
         if (url.endsWith('/wiki/articles.json')) {
-          return new Response(JSON.stringify({ articles: [] }), {
+          return new Response(JSON.stringify(fixture), {
             status: 200,
             headers: { 'content-type': 'application/json' },
           });
@@ -73,5 +73,37 @@ describe('render article integration', () => {
     expect(res.status).toBe(404);
     expect(text).toContain('title: Article Not Found');
     expect(text).toContain('# Article Not Found');
+  });
+
+  it('renders markdown via Accept negotiation on slug path', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.endsWith('/wiki/articles.json')) {
+          return new Response(JSON.stringify(fixture), {
+            status: 200,
+            headers: { 'content-type': 'application/json' },
+          });
+        }
+        return new Response('not found', { status: 404 });
+      }),
+    );
+
+    const req = new Request('https://worker.test/wiki/articles/hero-color-reference-table', {
+      headers: { accept: 'text/markdown, text/html' },
+    });
+
+    const env = {
+      UPSTREAM_BASE_URL: 'https://workshop.codes',
+      UPSTREAM_ARTICLES_PATH: '/wiki/articles.json',
+      RENDERER_VERSION: 'v1',
+      CACHE_TTL_SECONDS: '300',
+    };
+
+    const res = await worker.fetch(req, env as never);
+
+    expect(res.status).toBe(200);
+    expect(res.headers.get('content-type')).toContain('text/markdown');
   });
 });

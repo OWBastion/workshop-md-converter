@@ -1,7 +1,7 @@
 ---
 title: Hero Color Reference Table
 description: Workshop.code wiki article
-url: https://workshop.codes/wiki/articles/8507
+url: https://workshop.codes/wiki/articles/hero-color-reference-table
 source: workshop
 article_id: "8507"
 slug: hero-color-reference-table
@@ -16,7 +16,7 @@ content_type: wiki-article
 
 # Hero Color Reference Table
 
-> Source: https://workshop.codes/wiki/articles/8507
+> Source: https://workshop.codes/wiki/articles/hero-color-reference-table
 > Category: References
 > Updated: 2026-03-17T19:20:21.209Z
 
@@ -26,7 +26,7 @@ content_type: wiki-article
 
 **bold** and *italic*
 
-[relative](https://workshop.codes/wiki/articles/8508)
+[relative](https://workshop.codes/wiki/articles/another-article)
 
 ```ts
 console.log('ok')

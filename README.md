@@ -6,9 +6,8 @@ Cloudflare Worker that converts Workshop.code wiki JSON into agent-friendly Mark
 
 - `GET /healthz`
 - `GET /wiki/articles.md`
-- `GET /wiki/articles/:id.md`
 - `GET /wiki/articles/:slug.md`
-- `Accept: text/markdown` negotiation on `/wiki/articles/:id` and `/wiki/articles/:slug`
+- `Accept: text/markdown` negotiation on `/wiki/articles/:slug`
 - Minimal content cleaning (no full HTML->Markdown rewrite)
 - YAML front matter output
 - Markdown error pages for 404/upstream failures
@@ -34,3 +33,4 @@ Configured via `wrangler.jsonc` vars:
 
 - JSON endpoints like `/wiki/articles.json` are bypassed and keep upstream behavior.
 - Unknown upstream fields are preserved in `extra` during normalization.
+- URI strategy is `slug-only`; id-based article paths return Markdown 404.
