@@ -10,3 +10,12 @@ This repository implements V1 scope:
 - proxy-domain `.md` link normalization (supports `PUBLIC_BASE_URL` with request-origin fallback)
 - markdown error pages
 - tests and README
+
+## Route Contract (Slug-Only)
+
+- Only slug article routes are supported:
+  - `GET /wiki/articles/:slug.md`
+  - `GET /wiki/articles/:slug` + `Accept: text/markdown`
+- Numeric id article routes are always Markdown 404:
+  - `GET /wiki/articles/8507.md` must return Markdown 404.
+  - `GET /wiki/articles/8507` + `Accept: text/markdown` must return Markdown 404.

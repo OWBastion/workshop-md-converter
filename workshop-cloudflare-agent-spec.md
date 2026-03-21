@@ -5,7 +5,7 @@
 Workshop.code 现有 wiki 已支持在页面 URL 后附加 `.json` 返回结构化内容，例如：
 
 - `/wiki/articles.json`
-- 可扩展为 `/wiki/articles/:id.json` 或 `/wiki/articles/:slug.json`
+- 可扩展为 `/wiki/articles/:slug.json`
 
 目标是在不破坏现有人类访问体验的前提下，为 AI agent 提供一个**稳定、低成本、可缓存、可预测**的 Markdown 输出层。该输出层需要尽量贴近 Cloudflare “Markdown for Agents” 的交互习惯，但不依赖 Cloudflare 原生的 HTML -> Markdown 自动转换能力来处理 JSON。
 
@@ -62,7 +62,7 @@ Cloudflare 原生 Markdown for Agents 适用于：
 ```text
 Client / Agent
    |
-   | GET /wiki/articles/:id.md
+   | GET /wiki/articles/:slug.md
    | Accept: text/markdown
    v
 Cloudflare Worker
@@ -133,7 +133,6 @@ V1 最小依赖：
 
 1. **显式路径**
    - `/wiki/articles.md`
-   - `/wiki/articles/:id.md`
    - `/wiki/articles/:slug.md`
 
 2. **内容协商**
@@ -183,7 +182,6 @@ The requested article could not be resolved from Workshop.code JSON.
 
 ```ts
 export interface NormalizedArticle {
-  id: string;
   slug: string;
   title: string;
   description?: string;
@@ -201,7 +199,6 @@ export interface NormalizedArticle {
 
 ### 7.1 统一模型原则
 
-- `id` 必须存在
 - `slug` 如果上游没有，需由 `title` 或路径派生
 - `contentRaw` 保存源内容
 - `contentMarkdown` 保存清洗后正文
@@ -217,9 +214,8 @@ export interface NormalizedArticle {
 ---
 title: Hero Color Reference Table
 description: Workshop.code wiki article
-url: https://workshop.codes/wiki/articles/8507
+url: https://md.example/wiki/articles/hero-color-reference-table.md
 source: workshop
-article_id: "8507"
 slug: hero-color-reference-table
 category: References
 tags:
@@ -232,7 +228,7 @@ content_type: wiki-article
 
 # Hero Color Reference Table
 
-> Source: https://workshop.codes/wiki/articles/8507
+> Source: https://workshop.codes/wiki/articles/hero-color-reference-table
 > Category: References
 > Updated: 2026-03-17T19:20:21.209Z
 
@@ -256,8 +252,7 @@ generated_at: 2026-03-20T10:00:00.000Z
 
 ## Articles
 
-- [Hero Color Reference Table](https://workshop.codes/wiki/articles/8507)
-  - id: 8507
+- [Hero Color Reference Table](https://md.example/wiki/articles/hero-color-reference-table.md)
   - category: References
   - updated_at: 2026-03-17T19:20:21.209Z
 ```
@@ -334,9 +329,7 @@ generated_at: 2026-03-20T10:00:00.000Z
 ```text
 GET /healthz
 GET /wiki/articles.md
-GET /wiki/articles/:id.md
 GET /wiki/articles/:slug.md
-GET /wiki/articles/:id
 GET /wiki/articles/:slug
 ```
 
@@ -348,8 +341,10 @@ GET /wiki/articles/:slug
 
 ### 10.3 示例
 
-- `GET /wiki/articles/8507.md` -> 返回单篇 Markdown
-- `GET /wiki/articles/8507` + `Accept: text/markdown` -> 返回单篇 Markdown
+- `GET /wiki/articles/hero-color-reference-table.md` -> 返回单篇 Markdown
+- `GET /wiki/articles/hero-color-reference-table` + `Accept: text/markdown` -> 返回单篇 Markdown
+- `GET /wiki/articles/8507.md` -> 返回 Markdown 404
+- `GET /wiki/articles/8507` + `Accept: text/markdown` -> 返回 Markdown 404
 - `GET /wiki/articles.json` -> 仍返回 JSON
 
 ---
@@ -369,7 +364,7 @@ GET /wiki/articles/:slug
 - 列表页：缓存 60~300 秒
 - 单篇页：缓存 300~900 秒
 - 当上游含 `updated_at` 时，将其写入 `Last-Modified`
-- 基于 `article.id + updated_at + rendererVersion` 生成 `ETag`
+- 基于 `article.slug + updated_at + rendererVersion` 生成 `ETag`
 
 ### 11.3 Cache Key 组成
 
@@ -394,7 +389,7 @@ cacheKey = `${pathname}::${acceptVariant}::${rendererVersion}`
   traceId,
   route,
   upstreamUrl,
-  articleId,
+  articleSlug,
   status,
   cacheStatus,
   transformMs,
@@ -693,7 +688,7 @@ export interface ArticleRenderer {
 
 - `/healthz`
 - `/wiki/articles.md`
-- `/wiki/articles/:id.md`
+- `/wiki/articles/:slug.md`
 - `Accept: text/markdown`
 
 #### Step 4
@@ -701,7 +696,7 @@ export interface ArticleRenderer {
 
 - 拉取 JSON
 - 解析列表
-- 按 id/slug 定位文章
+- 按 slug 定位文章（id 路径请求直接 404）
 - 映射为 `NormalizedArticle`
 
 #### Step 5
@@ -735,8 +730,10 @@ export interface ArticleRenderer {
 
 以下全部通过才算完成：
 
-- `curl /wiki/articles/8507.md` 返回 `text/markdown`
-- `curl /wiki/articles/8507 -H 'Accept: text/markdown'` 返回 Markdown
+- `curl /wiki/articles/hero-color-reference-table.md` 返回 `text/markdown`
+- `curl /wiki/articles/hero-color-reference-table -H 'Accept: text/markdown'` 返回 Markdown
+- `curl /wiki/articles/8507.md` 返回 Markdown 404
+- `curl /wiki/articles/8507 -H 'Accept: text/markdown'` 返回 Markdown 404
 - front matter 完整
 - 原始代码块未损坏
 - 样式标签被剔除
@@ -861,7 +858,7 @@ export default {
 请基于本技术文档创建一个可运行的 Cloudflare Worker 项目，优先完成 V1：
 
 - 支持 `/wiki/articles.md`
-- 支持 `/wiki/articles/:id.md`
+- 支持 `/wiki/articles/:slug.md`
 - 支持 `Accept: text/markdown`
 - 输出 front matter + 正文 Markdown
 - 只做最小清洗
@@ -877,4 +874,3 @@ export default {
 
 - 不要再次重转换
 - 直接进行最小清洗后输出
-

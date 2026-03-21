@@ -55,6 +55,15 @@ Configured via `wrangler.jsonc` vars:
 - URI strategy is `slug-only`; id-based article paths return Markdown 404.
 - All Workshop article links are normalized to proxy `.md` URLs.
 
+## Route Contract (Slug-Only)
+
+- Supported article routes:
+  - `GET /wiki/articles/:slug.md`
+  - `GET /wiki/articles/:slug` with `Accept: text/markdown`
+- Numeric id article routes are not supported and must return Markdown 404:
+  - `GET /wiki/articles/8507.md` must return Markdown 404.
+  - `GET /wiki/articles/8507` with `Accept: text/markdown` must return Markdown 404.
+
 ## License & Content Ownership
 
 - This converter code is licensed under `AGPL-3.0-only` (see `LICENSE`).

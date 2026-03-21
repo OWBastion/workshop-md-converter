@@ -14,6 +14,7 @@ Build and maintain a Cloudflare Worker that transforms Workshop.code wiki JSON i
 6. Support both explicit `.md` routes and `Accept: text/markdown` negotiation.
 7. If upstream fields drift, adapt in `workshop-adapter` first; avoid changing renderer behavior.
 8. Preserve unknown fields in `extra`.
+9. Route docs are slug-only: never document `/wiki/articles/:id(.md)` as supported; if id paths are mentioned, they must be explicitly documented as Markdown 404 cases.
 
 ## Delivery Sequence
 

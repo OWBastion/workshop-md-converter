@@ -26,6 +26,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Enforce slug-only route docs
+        run: bash tools/check_slug_only_docs.sh
+
       - name: Run tests
         run: pnpm test
 
