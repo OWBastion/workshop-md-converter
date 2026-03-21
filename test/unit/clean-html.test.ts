@@ -14,10 +14,11 @@ describe('clean-html', () => {
     expect(out).not.toContain('style=');
   });
 
-  it('maps safe tags and normalizes links', () => {
-    const input = '<strong>bold</strong> <a href="/a">go</a>';
-    const out = cleanContent(input, 'https://workshop.codes/wiki/articles/1');
+  it('maps safe tags and rewrites workshop article links to proxy md links', () => {
+    const input = '<strong>bold</strong> <a href="/wiki/articles/destroy-effect">relative</a> <a href="https://workshop.codes/wiki/articles/abc?x=1#h">absolute</a>';
+    const out = cleanContent(input, 'https://md.example');
     expect(out).toContain('**bold**');
-    expect(out).toContain('[go](https://workshop.codes/a)');
+    expect(out).toContain('[relative](https://md.example/wiki/articles/destroy-effect.md)');
+    expect(out).toContain('[absolute](https://md.example/wiki/articles/abc.md?x=1#h)');
   });
 });

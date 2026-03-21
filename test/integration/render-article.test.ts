@@ -3,7 +3,7 @@ import worker from '../../src/index';
 import fixture from '../fixtures/article.sample.json';
 
 describe('render article integration', () => {
-  it('renders article markdown with headers', async () => {
+  it('renders article markdown with PUBLIC_BASE_URL', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn(async (input: RequestInfo | URL) => {
@@ -27,6 +27,7 @@ describe('render article integration', () => {
       UPSTREAM_ARTICLES_PATH: '/wiki/articles.json',
       RENDERER_VERSION: 'v1',
       CACHE_TTL_SECONDS: '300',
+      PUBLIC_BASE_URL: 'https://md.example',
     };
 
     const res = await worker.fetch(req, env as never);
@@ -35,9 +36,9 @@ describe('render article integration', () => {
     expect(res.status).toBe(200);
     expect(res.headers.get('content-type')).toContain('text/markdown');
     expect(res.headers.get('vary')).toContain('Accept');
-    expect(text).toContain('---');
-    expect(text).toContain('# Hero Color Reference Table');
-    expect(text).toContain('```ts');
+    expect(text).toContain('url: https://md.example/wiki/articles/hero-color-reference-table.md');
+    expect(text).toContain('[absolute](https://md.example/wiki/articles/destroy-effect.md)');
+    expect(text).not.toContain('article_id:');
     expect(text).not.toContain('<script');
   });
 
@@ -65,6 +66,7 @@ describe('render article integration', () => {
       UPSTREAM_ARTICLES_PATH: '/wiki/articles.json',
       RENDERER_VERSION: 'v1',
       CACHE_TTL_SECONDS: '300',
+      PUBLIC_BASE_URL: 'https://md.example',
     };
 
     const res = await worker.fetch(req, env as never);
@@ -75,7 +77,7 @@ describe('render article integration', () => {
     expect(text).toContain('# Article Not Found');
   });
 
-  it('renders markdown via Accept negotiation on slug path', async () => {
+  it('falls back to request origin when PUBLIC_BASE_URL is missing', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn(async (input: RequestInfo | URL) => {
@@ -102,8 +104,10 @@ describe('render article integration', () => {
     };
 
     const res = await worker.fetch(req, env as never);
+    const text = await res.text();
 
     expect(res.status).toBe(200);
     expect(res.headers.get('content-type')).toContain('text/markdown');
+    expect(text).toContain('url: https://worker.test/wiki/articles/hero-color-reference-table.md');
   });
 });

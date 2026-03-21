@@ -1,26 +1,21 @@
 import { describe, expect, it } from 'vitest';
 import { findArticleByRef, normalizeWorkshopArticle } from '../../src/source/workshop-adapter';
 
-const env = {
-  UPSTREAM_BASE_URL: 'https://workshop.codes',
-  UPSTREAM_ARTICLES_PATH: '/wiki/articles.json',
-  RENDERER_VERSION: 'v1',
-  CACHE_TTL_SECONDS: '300',
-};
+const publicBaseUrl = 'https://md.example';
 
 describe('workshop-adapter slug-first behavior', () => {
-  it('builds canonical article url from slug even if raw url is id-based', () => {
+  it('builds canonical md article url from slug', () => {
     const article = normalizeWorkshopArticle(
       {
         id: 8507,
         slug: 'hero-color-reference-table',
         title: 'Hero Color Reference Table',
-        url: 'https://workshop.codes/wiki/articles/8507',
       },
-      env,
+      publicBaseUrl,
     );
 
-    expect(article.url).toBe('https://workshop.codes/wiki/articles/hero-color-reference-table');
+    expect(article.url).toBe('https://md.example/wiki/articles/hero-color-reference-table.md');
+    expect((article as unknown as { id?: string }).id).toBeUndefined();
   });
 
   it('finds article by slug only', () => {
@@ -32,7 +27,7 @@ describe('workshop-adapter slug-first behavior', () => {
       },
     ];
 
-    expect(findArticleByRef(raw, 'hero-color-reference-table', env)?.slug).toBe('hero-color-reference-table');
-    expect(findArticleByRef(raw, '8507', env)).toBeUndefined();
+    expect(findArticleByRef(raw, 'hero-color-reference-table', publicBaseUrl)?.slug).toBe('hero-color-reference-table');
+    expect(findArticleByRef(raw, '8507', publicBaseUrl)).toBeUndefined();
   });
 });

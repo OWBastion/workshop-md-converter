@@ -7,5 +7,6 @@ This repository implements V1 scope:
 - `/wiki/articles/:slug.md`
 - `Accept: text/markdown` on slug path
 - minimal cleaning
+- proxy-domain `.md` link normalization (supports `PUBLIC_BASE_URL` with request-origin fallback)
 - markdown error pages
 - tests and README

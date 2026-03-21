@@ -50,9 +50,9 @@ function mapSafeTags(input: string): string {
     .trim();
 }
 
-export function cleanContent(input: string, baseUrl: string): string {
+export function cleanContent(input: string, publicBaseUrl: string): string {
   const decoded = decodeEntities(input);
   const stripped = stripStyleTags(decoded);
   const mapped = mapSafeTags(stripped);
-  return normalizeLinks(mapped, baseUrl);
+  return normalizeLinks(mapped, publicBaseUrl);
 }

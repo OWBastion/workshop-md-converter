@@ -32,6 +32,7 @@ Build and maintain a Cloudflare Worker that transforms Workshop.code wiki JSON i
 - `curl /wiki/articles/hero-color-reference-table -H 'Accept: text/markdown'` returns markdown.
 - `curl /wiki/articles/8507.md` returns Markdown 404.
 - Front matter includes core metadata.
+- Front matter does not expose legacy id fields.
 - Code blocks/tables are not broken by cleaning.
 - Style/script tags are removed.
 - Missing article returns Markdown 404.

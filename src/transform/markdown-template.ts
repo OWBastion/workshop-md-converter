@@ -9,7 +9,6 @@ export function buildFrontMatter(article: NormalizedArticle): string {
     description: article.description ?? 'Workshop.code wiki article',
     url: article.url,
     source: article.source,
-    article_id: article.id,
     slug: article.slug,
     category: article.category,
     tags: article.tags,
@@ -61,7 +60,6 @@ export function renderIndexMarkdown(articles: NormalizedArticle[]): { markdown: 
   const lines: string[] = [frontMatter, '', '# Workshop.code Wiki Articles', '', '## Articles', ''];
   for (const article of articles) {
     lines.push(`- [${article.title}](${article.url})`);
-    lines.push(`  - id: ${article.id}`);
     if (article.category) lines.push(`  - category: ${article.category}`);
     if (article.updatedAt) lines.push(`  - updated_at: ${article.updatedAt}`);
   }

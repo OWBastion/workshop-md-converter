@@ -25,6 +25,17 @@ export function resolveMarkdownRoute(pathname: string): RouteKind {
   return { kind: 'none' };
 }
 
+function isIdLikeRef(ref: string): boolean {
+  return /^\d+$/.test(ref);
+}
+
+function resolvePublicBaseUrl(request: Request, env: Env): string {
+  if (env.PUBLIC_BASE_URL && env.PUBLIC_BASE_URL.trim()) {
+    return env.PUBLIC_BASE_URL;
+  }
+  return new URL(request.url).origin;
+}
+
 function computeEtag(parts: string[]): string {
   const input = parts.join('::');
   let hash = 2166136261;
@@ -42,10 +53,15 @@ export async function markdownRoute(request: Request, env: Env): Promise<Respons
     throw new HttpError(404, 'Markdown route not found');
   }
 
+  if (route.kind === 'article' && isIdLikeRef(route.ref)) {
+    throw new HttpError(404, 'Article Not Found');
+  }
+
+  const publicBaseUrl = resolvePublicBaseUrl(request, env);
   const raw = await fetchJson<Record<string, unknown>>(env, env.UPSTREAM_ARTICLES_PATH);
 
   if (route.kind === 'index') {
-    const list = normalizeWorkshopList(raw, env);
+    const list = normalizeWorkshopList(raw, publicBaseUrl);
     const rendered = renderIndexMarkdown(list);
     const etag = computeEtag([pathname, env.RENDERER_VERSION, String(list.length)]);
     return markdownResponse({
@@ -57,14 +73,14 @@ export async function markdownRoute(request: Request, env: Env): Promise<Respons
   }
 
   const articles = extractArticles(raw);
-  const article = findArticleByRef(articles, route.ref, env);
+  const article = findArticleByRef(articles, route.ref, publicBaseUrl);
   if (!article) {
     throw new HttpError(404, 'Article Not Found');
   }
 
-  const cleaned = cleanContent(article.contentRaw, article.url);
+  const cleaned = cleanContent(article.contentRaw, publicBaseUrl);
   const rendered = renderArticleMarkdown({ ...article, contentMarkdown: cleaned });
-  const etag = computeEtag([article.id, article.updatedAt ?? 'na', env.RENDERER_VERSION]);
+  const etag = computeEtag([article.slug, article.updatedAt ?? 'na', env.RENDERER_VERSION]);
 
   return markdownResponse({
     markdown: rendered.markdown,

@@ -1,5 +1,4 @@
 export interface NormalizedArticle {
-  id: string;
   slug: string;
   title: string;
   description?: string;

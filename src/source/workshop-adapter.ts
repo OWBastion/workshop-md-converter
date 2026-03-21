@@ -1,5 +1,4 @@
 import type { NormalizedArticle, WorkshopArticleRaw, WorkshopListRaw } from '../core/types';
-import type { Env } from '../env';
 import { toSlug } from '../utils/slug';
 
 function pickString(obj: WorkshopArticleRaw, keys: string[]): string | undefined {
@@ -21,8 +20,12 @@ function pickStringArray(obj: WorkshopArticleRaw, keys: string[]): string[] {
   return [];
 }
 
+function normalizeSlug(slug: string): string {
+  return slug.replace(/\.md$/i, '').trim();
+}
+
 function toArticleUrl(base: string, slug: string): string {
-  return new URL(`/wiki/articles/${slug}`, base).toString();
+  return new URL(`/wiki/articles/${normalizeSlug(slug)}.md`, base).toString();
 }
 
 export function extractArticles(raw: WorkshopListRaw): WorkshopArticleRaw[] {
@@ -37,18 +40,18 @@ export function extractArticles(raw: WorkshopListRaw): WorkshopArticleRaw[] {
   return [];
 }
 
-export function normalizeWorkshopArticle(raw: WorkshopArticleRaw, env: Env): NormalizedArticle {
-  const id = pickString(raw, ['id', 'article_id', 'articleId']) ?? 'unknown';
-  const title = pickString(raw, ['title', 'name']) ?? `Article ${id}`;
-  const slug = pickString(raw, ['slug']) ?? (toSlug(title) || id);
+export function normalizeWorkshopArticle(raw: WorkshopArticleRaw, publicBaseUrl: string): NormalizedArticle {
+  const titleFallback = pickString(raw, ['title', 'name']) ?? 'Untitled Article';
+  const slugCandidate = pickString(raw, ['slug']) ?? (toSlug(titleFallback) || 'untitled-article');
+  const slug = normalizeSlug(slugCandidate);
+  const title = pickString(raw, ['title', 'name']) ?? slug;
   const description = pickString(raw, ['description', 'summary', 'excerpt']);
   const category = pickString(raw, ['category']);
   const contentRaw = pickString(raw, ['content', 'body', 'markdown', 'text']) ?? '';
   const createdAt = pickString(raw, ['created_at', 'createdAt']);
   const updatedAt = pickString(raw, ['updated_at', 'updatedAt']);
   const tags = pickStringArray(raw, ['tags', 'labels']);
-  // Canonical article URL is slug-based by contract.
-  const url = toArticleUrl(env.UPSTREAM_BASE_URL, slug);
+  const url = toArticleUrl(publicBaseUrl, slug);
 
   const known = new Set([
     'id',
@@ -77,7 +80,6 @@ export function normalizeWorkshopArticle(raw: WorkshopArticleRaw, env: Env): Nor
   const extra = Object.fromEntries(Object.entries(raw).filter(([key]) => !known.has(key)));
 
   return {
-    id,
     slug,
     title,
     description,
@@ -93,10 +95,14 @@ export function normalizeWorkshopArticle(raw: WorkshopArticleRaw, env: Env): Nor
   };
 }
 
-export function findArticleByRef(articles: WorkshopArticleRaw[], ref: string, env: Env): NormalizedArticle | undefined {
+export function findArticleByRef(
+  articles: WorkshopArticleRaw[],
+  ref: string,
+  publicBaseUrl: string,
+): NormalizedArticle | undefined {
   for (const article of articles) {
-    const normalized = normalizeWorkshopArticle(article, env);
-    if (normalized.slug === ref) {
+    const normalized = normalizeWorkshopArticle(article, publicBaseUrl);
+    if (normalized.slug === normalizeSlug(ref)) {
       return normalized;
     }
   }

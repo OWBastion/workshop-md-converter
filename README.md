@@ -28,9 +28,11 @@ Configured via `wrangler.jsonc` vars:
 - `UPSTREAM_ARTICLES_PATH`
 - `RENDERER_VERSION`
 - `CACHE_TTL_SECONDS`
+- `PUBLIC_BASE_URL` (optional, preferred base URL for generated `.md` links)
 
 ## Notes
 
 - JSON endpoints like `/wiki/articles.json` are bypassed and keep upstream behavior.
 - Unknown upstream fields are preserved in `extra` during normalization.
 - URI strategy is `slug-only`; id-based article paths return Markdown 404.
+- All Workshop article links are normalized to proxy `.md` URLs.

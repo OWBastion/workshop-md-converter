@@ -3,11 +3,10 @@ import { buildFrontMatter, renderArticleMarkdown } from '../../src/transform/mar
 import type { NormalizedArticle } from '../../src/core/types';
 
 const article: NormalizedArticle = {
-  id: '8507',
   slug: 'hero-color-reference-table',
   title: 'Hero Color Reference Table',
   description: 'Workshop.code wiki article',
-  url: 'https://workshop.codes/wiki/articles/8507',
+  url: 'https://md.example/wiki/articles/hero-color-reference-table.md',
   source: 'workshop',
   category: 'References',
   tags: ['Color'],
@@ -18,16 +17,18 @@ const article: NormalizedArticle = {
 };
 
 describe('markdown-template', () => {
-  it('builds front matter', () => {
+  it('builds front matter without legacy id fields', () => {
     const fm = buildFrontMatter(article);
     expect(fm).toContain('title: Hero Color Reference Table');
     expect(fm).toContain('content_type: wiki-article');
+    expect(fm).not.toContain('article_id');
   });
 
   it('renders article markdown', () => {
     const rendered = renderArticleMarkdown(article);
     expect(rendered.markdown).toContain('# Hero Color Reference Table');
     expect(rendered.markdown).toContain('## Content');
+    expect(rendered.markdown).toContain('> Source: https://md.example/wiki/articles/hero-color-reference-table.md');
     expect(rendered.tokens).toBeGreaterThan(0);
     expect(rendered.lastModified).toBeDefined();
   });

@@ -1,9 +1,8 @@
 ---
 title: Hero Color Reference Table
 description: Workshop.code wiki article
-url: https://workshop.codes/wiki/articles/hero-color-reference-table
+url: https://md.example/wiki/articles/hero-color-reference-table.md
 source: workshop
-article_id: "8507"
 slug: hero-color-reference-table
 category: References
 tags:
@@ -16,7 +15,7 @@ content_type: wiki-article
 
 # Hero Color Reference Table
 
-> Source: https://workshop.codes/wiki/articles/hero-color-reference-table
+> Source: https://md.example/wiki/articles/hero-color-reference-table.md
 > Category: References
 > Updated: 2026-03-17T19:20:21.209Z
 
@@ -26,7 +25,9 @@ content_type: wiki-article
 
 **bold** and *italic*
 
-[relative](https://workshop.codes/wiki/articles/another-article)
+[relative](https://md.example/wiki/articles/another-article.md)
+
+[absolute](https://md.example/wiki/articles/destroy-effect.md)
 
 ```ts
 console.log('ok')
