@@ -1,66 +1,45 @@
 # workshop-md-converter
 
-Cloudflare Worker that converts Workshop.code wiki JSON into agent-friendly Markdown.
+Cloudflare Worker that converts Workshop.code wiki JSON into stable, agent-friendly Markdown for API consumers.
 
-## Features (V1)
+## Overview
+
+This service provides Markdown-first wiki access with predictable routes and content negotiation.
+
+## Available Endpoints
 
 - `GET /healthz`
 - `GET /wiki/articles.md`
 - `GET /wiki/articles/:slug.md`
-- `Accept: text/markdown` negotiation on `/wiki/articles/:slug`
-- Minimal content cleaning (no full HTML->Markdown rewrite)
-- YAML front matter output
-- Markdown error pages for 404/upstream failures
+- `GET /wiki/articles/:slug` with `Accept: text/markdown`
 
-## Setup
+## Quick Usage
 
 ```bash
-pnpm install
-pnpm test
-pnpm run dev
+# Article index as markdown
+curl https://<your-worker-domain>/wiki/articles.md
+
+# Explicit markdown route
+curl https://<your-worker-domain>/wiki/articles/hero-color-reference-table.md
+
+# Content negotiation route
+curl https://<your-worker-domain>/wiki/articles/hero-color-reference-table \
+  -H 'Accept: text/markdown'
 ```
 
-## CI/CD Deployment
+## Output Behavior
 
-GitHub Actions automatically deploys to Cloudflare when code is pushed to `main`.
+- Responses are served as Markdown (`text/markdown; charset=utf-8`) on markdown routes and markdown-negotiated article routes.
+- Article output includes YAML front matter with core metadata.
+- Body conversion uses minimal cleaning only.
+- Existing markdown structures (such as headings, code blocks, tables, and lists) are preserved.
+- `<style>` and `<script>` tags are removed.
+- Missing articles return Markdown 404 pages.
+- Upstream fetch failures return Markdown error pages.
 
-Workflow gates:
+## Maintainer Note
 
-- `pnpm test`
-- `pnpm run build`
-- `pnpm run deploy`
-
-Required GitHub repository secrets:
-
-- `CLOUDFLARE_API_TOKEN` (required)
-- `CLOUDFLARE_ACCOUNT_ID` (recommended)
-
-If deployment fails, check the workflow logs in GitHub Actions:
-`Actions -> Deploy to Cloudflare -> latest run`.
-
-## Environment
-
-Configured via `wrangler.jsonc` vars:
-
-- `UPSTREAM_BASE_URL`
-- `UPSTREAM_ARTICLES_PATH`
-- `RENDERER_VERSION`
-- `CACHE_TTL_SECONDS`
-- `PUBLIC_BASE_URL` (optional, preferred base URL for generated `.md` links)
-
-## Notes
-
-- JSON endpoints like `/wiki/articles.json` are bypassed and keep upstream behavior.
-- Unknown upstream fields are preserved in `extra` during normalization.
-- URI strategy is `slug-only`.
-- All Workshop article links are normalized to proxy `.md` URLs.
-
-## Route Contract (Slug-Only)
-
-- Supported article routes:
-  - `GET /wiki/articles/:slug.md`
-  - `GET /wiki/articles/:slug` with `Accept: text/markdown`
-- `Source` metadata always uses canonical slug-based workshop links (`/wiki/articles/:slug`).
+For local development and runtime configuration, use the repository scripts and `wrangler.jsonc` as the source of truth. This README is intentionally user-focused and omits internal deployment and CI details.
 
 ## License & Content Ownership
 
