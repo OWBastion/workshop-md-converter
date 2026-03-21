@@ -160,6 +160,106 @@ describe('render article integration', () => {
     expect(text).toContain('# Article Not Found');
   });
 
+  it('falls back to single article json when slug is missing from list on .md route', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.endsWith('/wiki/articles.json')) {
+          return new Response(JSON.stringify(fixture), {
+            status: 200,
+            headers: { 'content-type': 'application/json' },
+          });
+        }
+        if (url.endsWith('/wiki/articles/how-to-use-loops.json')) {
+          return new Response(
+            JSON.stringify({
+              id: 4841,
+              title: 'How To Use Loops',
+              content: '# Loop Guide\n\nUse waits in loops.',
+            }),
+            {
+              status: 200,
+              headers: { 'content-type': 'application/json' },
+            },
+          );
+        }
+        return new Response('not found', { status: 404 });
+      }),
+    );
+
+    const req = new Request('https://worker.test/wiki/articles/how-to-use-loops.md', {
+      headers: { accept: 'text/markdown' },
+    });
+
+    const env = {
+      UPSTREAM_BASE_URL: 'https://workshop.codes',
+      UPSTREAM_ARTICLES_PATH: '/wiki/articles.json',
+      RENDERER_VERSION: 'v1',
+      CACHE_TTL_SECONDS: '300',
+      PUBLIC_BASE_URL: 'https://md.example',
+    };
+
+    const res = await worker.fetch(req, env as never);
+    const text = await res.text();
+
+    expect(res.status).toBe(200);
+    expect(res.headers.get('content-type')).toContain('text/markdown');
+    expect(res.headers.get('x-upstream-url')).toBe('https://workshop.codes/wiki/articles/how-to-use-loops.json');
+    expect(text).toContain('slug: how-to-use-loops');
+    expect(text).toContain('# Loop Guide');
+  });
+
+  it('falls back to single article json when slug is missing from list on negotiated route', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.endsWith('/wiki/articles.json')) {
+          return new Response(JSON.stringify(fixture), {
+            status: 200,
+            headers: { 'content-type': 'application/json' },
+          });
+        }
+        if (url.endsWith('/wiki/articles/how-to-use-loops.json')) {
+          return new Response(
+            JSON.stringify({
+              id: 4841,
+              title: 'How To Use Loops',
+              content: '# Loop Guide\n\nUse waits in loops.',
+            }),
+            {
+              status: 200,
+              headers: { 'content-type': 'application/json' },
+            },
+          );
+        }
+        return new Response('not found', { status: 404 });
+      }),
+    );
+
+    const req = new Request('https://worker.test/wiki/articles/how-to-use-loops', {
+      headers: { accept: 'text/markdown, text/html' },
+    });
+
+    const env = {
+      UPSTREAM_BASE_URL: 'https://workshop.codes',
+      UPSTREAM_ARTICLES_PATH: '/wiki/articles.json',
+      RENDERER_VERSION: 'v1',
+      CACHE_TTL_SECONDS: '300',
+      PUBLIC_BASE_URL: 'https://md.example',
+    };
+
+    const res = await worker.fetch(req, env as never);
+    const text = await res.text();
+
+    expect(res.status).toBe(200);
+    expect(res.headers.get('content-type')).toContain('text/markdown');
+    expect(res.headers.get('x-upstream-url')).toBe('https://workshop.codes/wiki/articles/how-to-use-loops.json');
+    expect(text).toContain('slug: how-to-use-loops');
+    expect(text).toContain('# Loop Guide');
+  });
+
   it('falls back to request origin when PUBLIC_BASE_URL is missing', async () => {
     vi.stubGlobal(
       'fetch',

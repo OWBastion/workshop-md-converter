@@ -1,6 +1,6 @@
 import { HttpError } from '../core/errors';
 import { fetchJson } from '../source/fetch-json';
-import { extractArticles, findArticleByRef } from '../source/workshop-adapter';
+import { extractArticles, findArticleByRef, normalizeArticleRef, normalizeWorkshopSingleArticle } from '../source/workshop-adapter';
 import { normalizeWorkshopList } from '../source/normalize';
 import { cleanContent } from '../transform/clean-html';
 import { renderArticleMarkdown, renderIndexMarkdown } from '../transform/markdown-template';
@@ -69,7 +69,20 @@ export async function markdownRoute(request: Request, env: Env): Promise<Respons
   }
 
   const articles = extractArticles(raw);
-  const article = findArticleByRef(articles, route.ref, publicBaseUrl, env.UPSTREAM_BASE_URL);
+  const refSlug = normalizeArticleRef(route.ref);
+  let article = findArticleByRef(articles, refSlug, publicBaseUrl, env.UPSTREAM_BASE_URL);
+  let articleSource = upstream;
+  if (!article) {
+    try {
+      const single = await fetchJson<Record<string, unknown>>(env, `/wiki/articles/${refSlug}.json`);
+      article = normalizeWorkshopSingleArticle(single.data, publicBaseUrl, env.UPSTREAM_BASE_URL);
+      articleSource = single;
+    } catch (error) {
+      if (!(error instanceof HttpError) || error.status !== 404) {
+        throw error;
+      }
+    }
+  }
   if (!article) {
     throw new HttpError(404, 'Article Not Found');
   }
@@ -85,8 +98,8 @@ export async function markdownRoute(request: Request, env: Env): Promise<Respons
     lastModified: rendered.lastModified,
     env,
   });
-  response.headers.set('x-upstream-url', upstream.upstreamUrl);
-  response.headers.set('x-upstream-bytes', String(upstream.bytesIn));
+  response.headers.set('x-upstream-url', articleSource.upstreamUrl);
+  response.headers.set('x-upstream-bytes', String(articleSource.bytesIn));
   response.headers.set('x-article-slug', article.slug);
   return response;
 }

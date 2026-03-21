@@ -20,16 +20,16 @@ function pickStringArray(obj: WorkshopArticleRaw, keys: string[]): string[] {
   return [];
 }
 
-function normalizeSlug(slug: string): string {
+export function normalizeArticleRef(slug: string): string {
   return slug.replace(/\.md$/i, '').trim();
 }
 
 function toArticleUrl(base: string, slug: string): string {
-  return new URL(`/wiki/articles/${normalizeSlug(slug)}.md`, base).toString();
+  return new URL(`/wiki/articles/${normalizeArticleRef(slug)}.md`, base).toString();
 }
 
 function toSourceArticleUrl(base: string, slug: string): string {
-  return new URL(`/wiki/articles/${normalizeSlug(slug)}`, base).toString();
+  return new URL(`/wiki/articles/${normalizeArticleRef(slug)}`, base).toString();
 }
 
 export function extractArticles(raw: WorkshopListRaw): WorkshopArticleRaw[] {
@@ -51,7 +51,7 @@ export function normalizeWorkshopArticle(
 ): NormalizedArticle {
   const titleFallback = pickString(raw, ['title', 'name']) ?? 'Untitled Article';
   const slugCandidate = pickString(raw, ['slug']) ?? (toSlug(titleFallback) || 'untitled-article');
-  const slug = normalizeSlug(slugCandidate);
+  const slug = normalizeArticleRef(slugCandidate);
   const title = pickString(raw, ['title', 'name']) ?? slug;
   const description = pickString(raw, ['description', 'summary', 'excerpt']);
   const category = pickString(raw, ['category']);
@@ -110,9 +110,17 @@ export function findArticleByRef(
 ): NormalizedArticle | undefined {
   for (const article of articles) {
     const normalized = normalizeWorkshopArticle(article, publicBaseUrl, upstreamBaseUrl);
-    if (normalized.slug === normalizeSlug(ref)) {
+    if (normalized.slug === normalizeArticleRef(ref)) {
       return normalized;
     }
   }
   return undefined;
+}
+
+export function normalizeWorkshopSingleArticle(
+  raw: WorkshopArticleRaw,
+  publicBaseUrl: string,
+  upstreamBaseUrl = 'https://workshop.codes',
+): NormalizedArticle {
+  return normalizeWorkshopArticle(raw, publicBaseUrl, upstreamBaseUrl);
 }
