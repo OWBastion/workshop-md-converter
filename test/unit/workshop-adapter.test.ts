@@ -4,13 +4,13 @@ import { findArticleByRef, normalizeWorkshopArticle } from '../../src/source/wor
 const publicBaseUrl = 'https://md.example';
 
 describe('workshop-adapter slug-first behavior', () => {
-  it('builds canonical proxy and source article urls from slug', () => {
+  it('builds canonical proxy and source article urls when raw url is id-based', () => {
     const article = normalizeWorkshopArticle(
       {
         id: 8507,
         slug: 'hero-color-reference-table',
         title: 'Hero Color Reference Table',
-        url: 'https://workshop.codes/wiki/articles/hero-color-reference-table',
+        url: 'https://workshop.codes/wiki/articles/8507',
       },
       publicBaseUrl,
     );
@@ -18,6 +18,19 @@ describe('workshop-adapter slug-first behavior', () => {
     expect(article.url).toBe('https://md.example/wiki/articles/hero-color-reference-table.md');
     expect(article.sourceUrl).toBe('https://workshop.codes/wiki/articles/hero-color-reference-table');
     expect((article as unknown as { id?: string }).id).toBeUndefined();
+  });
+
+  it('keeps source url canonical when raw url is slug-based', () => {
+    const article = normalizeWorkshopArticle(
+      {
+        slug: 'hero-color-reference-table',
+        title: 'Hero Color Reference Table',
+        url: 'https://workshop.codes/wiki/articles/hero-color-reference-table',
+      },
+      publicBaseUrl,
+    );
+
+    expect(article.sourceUrl).toBe('https://workshop.codes/wiki/articles/hero-color-reference-table');
   });
 
   it('falls back to upstream base url when raw source url is missing', () => {

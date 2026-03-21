@@ -63,6 +63,7 @@ Configured via `wrangler.jsonc` vars:
 - Numeric id article routes are not supported and must return Markdown 404:
   - `GET /wiki/articles/8507.md` must return Markdown 404.
   - `GET /wiki/articles/8507` with `Accept: text/markdown` must return Markdown 404.
+- `Source` metadata always uses canonical slug-based workshop links (`/wiki/articles/:slug`) to avoid id-link fallback.
 
 ## License & Content Ownership
 

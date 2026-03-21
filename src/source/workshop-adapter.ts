@@ -60,7 +60,7 @@ export function normalizeWorkshopArticle(
   const updatedAt = pickString(raw, ['updated_at', 'updatedAt']);
   const tags = pickStringArray(raw, ['tags', 'labels']);
   const url = toArticleUrl(publicBaseUrl, slug);
-  const sourceUrl = pickString(raw, ['url']) ?? toSourceArticleUrl(upstreamBaseUrl, slug);
+  const sourceUrl = toSourceArticleUrl(upstreamBaseUrl, slug);
 
   const known = new Set([
     'id',
