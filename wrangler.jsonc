@@ -1,0 +1,12 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "workshop-md-converter",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-03-21",
+  "vars": {
+    "UPSTREAM_BASE_URL": "https://workshop.codes",
+    "UPSTREAM_ARTICLES_PATH": "/wiki/articles.json",
+    "RENDERER_VERSION": "v1",
+    "CACHE_TTL_SECONDS": "300"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "articles": [
+    {
+      "id": 8507,
+      "slug": "hero-color-reference-table",
+      "title": "Hero Color Reference Table",
+      "description": "Workshop.code wiki article",
+      "url": "https://workshop.codes/wiki/articles/8507",
+      "category": "References",
+      "tags": ["Color", "Hero Color"],
+      "created_at": "2026-03-17T19:20:21.209Z",
+      "updated_at": "2026-03-17T19:20:21.209Z",
+      "content": "# Intro\n\n<strong>bold</strong> and <em>italic</em>\n\n[relative](/wiki/articles/8508)\n\n```ts\nconsole.log('ok')\n```\n\n<table><tr><td>A</td></tr></table><script>alert(1)</script>"
+    }
+  ]
+}
