@@ -54,3 +54,9 @@ Configured via `wrangler.jsonc` vars:
 - Unknown upstream fields are preserved in `extra` during normalization.
 - URI strategy is `slug-only`; id-based article paths return Markdown 404.
 - All Workshop article links are normalized to proxy `.md` URLs.
+
+## License & Content Ownership
+
+- This converter code is licensed under `AGPL-3.0-only` (see `LICENSE`).
+- Workshop.codes wiki content rendered by this project is not part of this repository's codebase and is not re-licensed under this project's AGPL license.
+- Use and redistribution of Workshop.codes content must follow Workshop.codes Terms of Service: <https://workshop.codes/tos>.

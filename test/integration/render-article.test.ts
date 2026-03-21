@@ -38,6 +38,7 @@ describe('render article integration', () => {
     expect(res.headers.get('vary')).toContain('Accept');
     expect(text).toContain('url: https://md.example/wiki/articles/hero-color-reference-table.md');
     expect(text).toContain('[absolute](https://md.example/wiki/articles/destroy-effect.md)');
+    expect(text).toContain('https://workshop.codes/tos');
     expect(text).not.toContain('article_id:');
     expect(text).not.toContain('<script');
   });

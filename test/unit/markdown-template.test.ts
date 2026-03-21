@@ -29,6 +29,7 @@ describe('markdown-template', () => {
     expect(rendered.markdown).toContain('# Hero Color Reference Table');
     expect(rendered.markdown).toContain('## Content');
     expect(rendered.markdown).toContain('> Source: https://md.example/wiki/articles/hero-color-reference-table.md');
+    expect(rendered.markdown).toContain('> Notice: AGPL-3.0-only applies to this converter code.');
     expect(rendered.tokens).toBeGreaterThan(0);
     expect(rendered.lastModified).toBeDefined();
   });

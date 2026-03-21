@@ -24,6 +24,7 @@ export function renderArticleMarkdown(article: NormalizedArticle): { markdown: s
     `> Source: ${article.url}`,
     article.category ? `> Category: ${article.category}` : undefined,
     article.updatedAt ? `> Updated: ${article.updatedAt}` : undefined,
+    '> Notice: AGPL-3.0-only applies to this converter code. Rendered Workshop.codes wiki content is third-party content and is not part of this project\'s licensed code. Use and redistribution of that content must comply with https://workshop.codes/tos.',
   ]
     .filter(Boolean)
     .join('\n');
