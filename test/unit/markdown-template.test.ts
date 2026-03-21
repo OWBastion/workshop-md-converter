@@ -7,6 +7,7 @@ const article: NormalizedArticle = {
   title: 'Hero Color Reference Table',
   description: 'Workshop.code wiki article',
   url: 'https://md.example/wiki/articles/hero-color-reference-table.md',
+  sourceUrl: 'https://workshop.codes/wiki/articles/hero-color-reference-table',
   source: 'workshop',
   category: 'References',
   tags: ['Color'],
@@ -28,8 +29,8 @@ describe('markdown-template', () => {
     const rendered = renderArticleMarkdown(article);
     expect(rendered.markdown).toContain('# Hero Color Reference Table');
     expect(rendered.markdown).toContain('## Content');
-    expect(rendered.markdown).toContain('> Source: https://md.example/wiki/articles/hero-color-reference-table.md');
-    expect(rendered.markdown).toContain('> Notice: AGPL-3.0-only applies to this converter code.');
+    expect(rendered.markdown).toContain('> Source: https://workshop.codes/wiki/articles/hero-color-reference-table');
+    expect(rendered.markdown).not.toContain('> Notice:');
     expect(rendered.tokens).toBeGreaterThan(0);
     expect(rendered.lastModified).toBeDefined();
   });

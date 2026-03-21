@@ -3,6 +3,7 @@ export interface NormalizedArticle {
   title: string;
   description?: string;
   url: string;
+  sourceUrl: string;
   source: 'workshop';
   category?: string;
   tags: string[];

@@ -15,10 +15,9 @@ content_type: wiki-article
 
 # Hero Color Reference Table
 
-> Source: https://md.example/wiki/articles/hero-color-reference-table.md
+> Source: https://workshop.codes/wiki/articles/hero-color-reference-table
 > Category: References
 > Updated: 2026-03-17T19:20:21.209Z
-> Notice: AGPL-3.0-only applies to this converter code. Rendered Workshop.codes wiki content is third-party content and is not part of this project's licensed code. Use and redistribution of that content must comply with https://workshop.codes/tos.
 
 ## Content
 

@@ -61,7 +61,7 @@ export async function markdownRoute(request: Request, env: Env): Promise<Respons
   const raw = await fetchJson<Record<string, unknown>>(env, env.UPSTREAM_ARTICLES_PATH);
 
   if (route.kind === 'index') {
-    const list = normalizeWorkshopList(raw, publicBaseUrl);
+    const list = normalizeWorkshopList(raw, publicBaseUrl, env.UPSTREAM_BASE_URL);
     const rendered = renderIndexMarkdown(list);
     const etag = computeEtag([pathname, env.RENDERER_VERSION, String(list.length)]);
     return markdownResponse({
@@ -73,7 +73,7 @@ export async function markdownRoute(request: Request, env: Env): Promise<Respons
   }
 
   const articles = extractArticles(raw);
-  const article = findArticleByRef(articles, route.ref, publicBaseUrl);
+  const article = findArticleByRef(articles, route.ref, publicBaseUrl, env.UPSTREAM_BASE_URL);
   if (!article) {
     throw new HttpError(404, 'Article Not Found');
   }

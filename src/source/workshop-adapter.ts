@@ -28,6 +28,10 @@ function toArticleUrl(base: string, slug: string): string {
   return new URL(`/wiki/articles/${normalizeSlug(slug)}.md`, base).toString();
 }
 
+function toSourceArticleUrl(base: string, slug: string): string {
+  return new URL(`/wiki/articles/${normalizeSlug(slug)}`, base).toString();
+}
+
 export function extractArticles(raw: WorkshopListRaw): WorkshopArticleRaw[] {
   const candidates = [raw.data, raw.items, raw.articles, raw];
   for (const candidate of candidates) {
@@ -40,7 +44,11 @@ export function extractArticles(raw: WorkshopListRaw): WorkshopArticleRaw[] {
   return [];
 }
 
-export function normalizeWorkshopArticle(raw: WorkshopArticleRaw, publicBaseUrl: string): NormalizedArticle {
+export function normalizeWorkshopArticle(
+  raw: WorkshopArticleRaw,
+  publicBaseUrl: string,
+  upstreamBaseUrl = 'https://workshop.codes',
+): NormalizedArticle {
   const titleFallback = pickString(raw, ['title', 'name']) ?? 'Untitled Article';
   const slugCandidate = pickString(raw, ['slug']) ?? (toSlug(titleFallback) || 'untitled-article');
   const slug = normalizeSlug(slugCandidate);
@@ -52,6 +60,7 @@ export function normalizeWorkshopArticle(raw: WorkshopArticleRaw, publicBaseUrl:
   const updatedAt = pickString(raw, ['updated_at', 'updatedAt']);
   const tags = pickStringArray(raw, ['tags', 'labels']);
   const url = toArticleUrl(publicBaseUrl, slug);
+  const sourceUrl = pickString(raw, ['url']) ?? toSourceArticleUrl(upstreamBaseUrl, slug);
 
   const known = new Set([
     'id',
@@ -84,6 +93,7 @@ export function normalizeWorkshopArticle(raw: WorkshopArticleRaw, publicBaseUrl:
     title,
     description,
     url,
+    sourceUrl,
     source: 'workshop',
     category,
     tags,
@@ -99,9 +109,10 @@ export function findArticleByRef(
   articles: WorkshopArticleRaw[],
   ref: string,
   publicBaseUrl: string,
+  upstreamBaseUrl = 'https://workshop.codes',
 ): NormalizedArticle | undefined {
   for (const article of articles) {
-    const normalized = normalizeWorkshopArticle(article, publicBaseUrl);
+    const normalized = normalizeWorkshopArticle(article, publicBaseUrl, upstreamBaseUrl);
     if (normalized.slug === normalizeSlug(ref)) {
       return normalized;
     }
