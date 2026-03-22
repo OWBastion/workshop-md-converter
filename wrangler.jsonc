@@ -8,5 +8,8 @@
     "UPSTREAM_ARTICLES_PATH": "/wiki/articles.json",
     "RENDERER_VERSION": "v1",
     "CACHE_TTL_SECONDS": "300"
+  },
+  "observability": {
+    "enabled": true
   }
 }
