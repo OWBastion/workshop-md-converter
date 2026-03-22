@@ -18,16 +18,16 @@ This service provides Markdown-first wiki access with predictable routes and con
 
 ```bash
 # Root onboarding guide
-curl https://<your-worker-domain>/
+curl https://md.owbastion.codes/
 
 # Article index as markdown
-curl https://<your-worker-domain>/wiki/articles.md
+curl https://md.owbastion.codes/wiki/articles.md
 
 # Explicit markdown route
-curl https://<your-worker-domain>/wiki/articles/hero-color-reference-table.md
+curl https://md.owbastion.codes/wiki/articles/hero-color-reference-table.md
 
 # Content negotiation route
-curl https://<your-worker-domain>/wiki/articles/hero-color-reference-table \
+curl https://md.owbastion.codes/wiki/articles/hero-color-reference-table \
   -H 'Accept: text/markdown'
 ```
 

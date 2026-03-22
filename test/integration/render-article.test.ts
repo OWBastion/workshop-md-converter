@@ -30,7 +30,7 @@ describe('render article integration', () => {
     expect(text).toContain('title: Workshop Markdown Converter Guide');
     expect(text).toContain('# Workshop Markdown Converter');
     expect(text).toContain('Start here: `/wiki/articles.md`');
-    expect(text).toContain('curl https://<your-worker-domain>/wiki/articles.md');
+    expect(text).toContain('curl https://md.owbastion.codes/wiki/articles.md');
     expect(text).toContain('Accept: text/markdown');
     expect(fetchMock).not.toHaveBeenCalled();
   });
