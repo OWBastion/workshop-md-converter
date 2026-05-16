@@ -13,7 +13,7 @@
   "dependencies": {
     "he": "^1.2.0",
     "linkedom": "^0.18.12",
-    "yaml": "^2.8.4"
+    "yaml": "^2.9.0"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20260509.1",
