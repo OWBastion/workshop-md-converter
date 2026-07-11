@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "he": "^1.2.0",
-    "linkedom": "^0.18.12",
+    "linkedom": "^0.18.13",
     "yaml": "^2.9.0"
   },
   "devDependencies": {
