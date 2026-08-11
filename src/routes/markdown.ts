@@ -1,4 +1,5 @@
 import { HttpError } from '../core/errors';
+import { NOT_FOUND_CACHE_TTL_SECONDS } from '../core/config';
 import { fetchJson } from '../source/fetch-json';
 import { extractArticles, findArticleByRef, normalizeArticleRef, normalizeWorkshopSingleArticle } from '../source/workshop-adapter';
 import { normalizeWorkshopList } from '../source/normalize';
@@ -44,7 +45,7 @@ function computeEtag(parts: string[]): string {
   return `"${(hash >>> 0).toString(16)}"`;
 }
 
-export async function markdownRoute(request: Request, env: Env): Promise<Response> {
+export async function markdownRoute(request: Request, env: Env, ctx?: ExecutionContext): Promise<Response> {
   const pathname = new URL(request.url).pathname;
   const route = resolveMarkdownRoute(pathname);
   if (route.kind === 'none') {
@@ -54,7 +55,7 @@ export async function markdownRoute(request: Request, env: Env): Promise<Respons
   const publicBaseUrl = resolvePublicBaseUrl(request, env);
 
   if (route.kind === 'index') {
-    const upstream = await fetchJson<Record<string, unknown>>(env, env.UPSTREAM_ARTICLES_PATH);
+    const upstream = await fetchJson<Record<string, unknown>>(env, env.UPSTREAM_ARTICLES_PATH, ctx);
     const raw = upstream.data;
     const list = normalizeWorkshopList(raw, publicBaseUrl, env.UPSTREAM_BASE_URL);
     const rendered = renderIndexMarkdown(list);
@@ -67,6 +68,7 @@ export async function markdownRoute(request: Request, env: Env): Promise<Respons
     });
     response.headers.set('x-upstream-url', upstream.upstreamUrl);
     response.headers.set('x-upstream-bytes', String(upstream.bytesIn));
+    response.headers.set('x-upstream-cache', upstream.fromCache ? 'HIT' : 'MISS');
     return response;
   }
 
@@ -74,7 +76,7 @@ export async function markdownRoute(request: Request, env: Env): Promise<Respons
   let article: NormalizedArticle | undefined;
   let articleSource: FetchJsonResult<Record<string, unknown>>;
   try {
-    const single = await fetchJson<Record<string, unknown>>(env, `/wiki/articles/${refSlug}.json`);
+    const single = await fetchJson<Record<string, unknown>>(env, `/wiki/articles/${refSlug}.json`, ctx);
     article = normalizeWorkshopSingleArticle(single.data, publicBaseUrl, env.UPSTREAM_BASE_URL);
     articleSource = single;
   } catch (error) {
@@ -82,7 +84,7 @@ export async function markdownRoute(request: Request, env: Env): Promise<Respons
       throw error;
     }
 
-    const upstream = await fetchJson<Record<string, unknown>>(env, env.UPSTREAM_ARTICLES_PATH);
+    const upstream = await fetchJson<Record<string, unknown>>(env, env.UPSTREAM_ARTICLES_PATH, ctx);
     const raw = upstream.data;
     const articles = extractArticles(raw);
     article = findArticleByRef(articles, refSlug, publicBaseUrl, env.UPSTREAM_BASE_URL);
@@ -105,6 +107,7 @@ export async function markdownRoute(request: Request, env: Env): Promise<Respons
   });
   response.headers.set('x-upstream-url', articleSource.upstreamUrl);
   response.headers.set('x-upstream-bytes', String(articleSource.bytesIn));
+  response.headers.set('x-upstream-cache', articleSource.fromCache ? 'HIT' : 'MISS');
   response.headers.set('x-article-slug', article.slug);
   return response;
 }
@@ -112,11 +115,16 @@ export async function markdownRoute(request: Request, env: Env): Promise<Respons
 export function markdownErrorResponse(status: number, title: string, message: string, env: Env): Response {
   const markdown = `---\ntitle: ${title}\ntype: error\nstatus: ${status}\n---\n\n# ${title}\n\n${message}\n`;
   const etag = computeEtag([String(status), title, env.RENDERER_VERSION]);
+  const cacheControl =
+    status === 404
+      ? `public, max-age=${NOT_FOUND_CACHE_TTL_SECONDS}, s-maxage=${NOT_FOUND_CACHE_TTL_SECONDS}`
+      : 'no-store';
   return markdownResponse({
     markdown,
     tokens: Math.ceil(markdown.length / 4),
     etag,
     env,
     status,
+    cacheControl,
   });
 }

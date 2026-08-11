@@ -3,5 +3,6 @@ export interface Env {
   UPSTREAM_ARTICLES_PATH: string;
   RENDERER_VERSION: string;
   CACHE_TTL_SECONDS: string;
+  UPSTREAM_CACHE_TTL_SECONDS?: string;
   PUBLIC_BASE_URL?: string;
 }

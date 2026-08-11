@@ -9,14 +9,16 @@ interface MarkdownResponseInput {
   env: Env;
   status?: number;
   contentType?: string;
+  cacheControl?: string;
 }
 
 export function markdownResponse(input: MarkdownResponseInput): Response {
   const ttl = getCacheTtlSeconds(input.env);
+  const cacheControl = input.cacheControl ?? `public, max-age=${ttl}, s-maxage=${ttl}`;
   const headers = new Headers({
     'content-type': input.contentType ?? 'text/markdown; charset=utf-8',
     vary: 'Accept',
-    'cache-control': `public, max-age=${ttl}, s-maxage=${ttl}`,
+    'cache-control': cacheControl,
     etag: input.etag,
     'x-agent-content-type': 'wiki-article',
     'x-source-format': 'workshop-json',

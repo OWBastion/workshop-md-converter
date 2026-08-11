@@ -12,6 +12,7 @@ This repository implements V1 scope:
 - minimal cleaning
 - proxy-domain `.md` link normalization (supports `PUBLIC_BASE_URL` with request-origin fallback)
 - markdown error pages
+- Worker-native caching (Cache API) for upstream JSON and generated Markdown, with status-specific TTLs (see `docs/ADR-002-caching-strategy.md`)
 - tests and README
 
 ## Route Contract (Slug-Only)

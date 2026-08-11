@@ -5,6 +5,7 @@ export interface LogContext {
   articleSlug?: string;
   status: number;
   cacheStatus?: string;
+  upstreamCache?: string;
   transformMs?: number;
   bytesIn?: number;
   bytesOut?: number;

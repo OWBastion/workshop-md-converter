@@ -42,6 +42,14 @@ curl https://md.owbastion.codes/wiki/articles/hero-color-reference-table \
 - Missing articles return Markdown 404 pages.
 - Upstream fetch failures return Markdown error pages.
 
+## Caching
+
+- Generated Markdown (article index and article routes) is cached with the Workers Cache API. Cache keys include the route and renderer version, writes use `ctx.waitUntil()`, and hit/miss is observable via the `x-cache-status` response header (`HIT`/`MISS`).
+- Upstream Workshop.codes JSON subrequests are cached separately: success for `UPSTREAM_CACHE_TTL_SECONDS` (default 60s), 404 for 60s, and 5xx never. `x-upstream-cache` (`HIT`/`MISS`) reports upstream cache state at generation time.
+- 404 responses use a short TTL; 406 and 5xx responses are `no-store` and never cached.
+- The Cache API is PoP-local: entries live in the data center that served the request and are not a durable global store.
+- Generation stays on demand and bounded: the article index is metadata-only; no bulk rendering or hashing of article bodies is performed. See `docs/ADR-002-caching-strategy.md` for the full strategy.
+
 ## Maintainer Note
 
 For local development and runtime configuration, use the repository scripts and `wrangler.jsonc` as the source of truth. This README is intentionally user-focused and omits internal deployment and CI details.

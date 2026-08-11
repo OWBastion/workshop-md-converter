@@ -1,9 +1,12 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import worker from '../../src/index';
 import fixture from '../fixtures/article.sample.json';
 import expectedMarkdown from '../fixtures/article.expected.md?raw';
+import { FakeCache, makeCtx, stubCaches } from '../helpers/fake-cache';
 
 describe('render article integration', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
   it('renders root onboarding guide as markdown without upstream fetch', async () => {
     const fetchMock = vi.fn(async () => new Response('ok'));
     vi.stubGlobal('fetch', fetchMock);
@@ -323,5 +326,175 @@ describe('render article integration', () => {
     expect(res.status).toBe(200);
     expect(res.headers.get('content-type')).toContain('text/markdown');
     expect(text).toContain('url: https://worker.test/wiki/articles/hero-color-reference-table.md');
+  });
+
+  it('serves repeated article requests from the generated response cache', async () => {
+    stubCaches(new FakeCache());
+    const { ctx, flush } = makeCtx();
+
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.endsWith('/wiki/articles/how-to-use-loops.json')) {
+        return new Response(
+          JSON.stringify({ id: 4841, title: 'How To Use Loops', content: '# Loop Guide' }),
+          { status: 200, headers: { 'content-type': 'application/json' } },
+        );
+      }
+      return new Response('not found', { status: 404 });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const env = {
+      UPSTREAM_BASE_URL: 'https://workshop.codes',
+      UPSTREAM_ARTICLES_PATH: '/wiki/articles.json',
+      RENDERER_VERSION: 'v1',
+      CACHE_TTL_SECONDS: '300',
+      PUBLIC_BASE_URL: 'https://md.example',
+    };
+
+    const first = await worker.fetch(
+      new Request('https://worker.test/wiki/articles/how-to-use-loops.md'),
+      env as never,
+      ctx as never,
+    );
+    expect(first.status).toBe(200);
+    expect(first.headers.get('x-cache-status')).toBe('MISS');
+    expect(first.headers.get('x-upstream-cache')).toBe('MISS');
+    const firstText = await first.text();
+
+    await flush();
+
+    const second = await worker.fetch(
+      new Request('https://worker.test/wiki/articles/how-to-use-loops.md'),
+      env as never,
+      ctx as never,
+    );
+    expect(second.status).toBe(200);
+    expect(second.headers.get('x-cache-status')).toBe('HIT');
+    expect(second.headers.get('vary')).toContain('Accept');
+    const secondText = await second.text();
+    expect(secondText).toBe(firstText);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('serves the cached article index without re-fetching upstream', async () => {
+    stubCaches(new FakeCache());
+    const { ctx, flush } = makeCtx();
+
+    const fetchMock = vi.fn(async () =>
+      new Response(JSON.stringify(fixture), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const env = {
+      UPSTREAM_BASE_URL: 'https://workshop.codes',
+      UPSTREAM_ARTICLES_PATH: '/wiki/articles.json',
+      RENDERER_VERSION: 'v1',
+      CACHE_TTL_SECONDS: '300',
+      PUBLIC_BASE_URL: 'https://md.example',
+    };
+
+    const first = await worker.fetch(
+      new Request('https://worker.test/wiki/articles.md'),
+      env as never,
+      ctx as never,
+    );
+    expect(first.headers.get('x-cache-status')).toBe('MISS');
+    await first.text();
+    await flush();
+
+    const second = await worker.fetch(
+      new Request('https://worker.test/wiki/articles.md'),
+      env as never,
+      ctx as never,
+    );
+    expect(second.headers.get('x-cache-status')).toBe('HIT');
+    await second.text();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('caches generated 404 markdown with a short TTL', async () => {
+    stubCaches(new FakeCache());
+    const { ctx, flush } = makeCtx();
+
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.endsWith('/wiki/articles.json')) {
+        return new Response(JSON.stringify(fixture), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        });
+      }
+      return new Response('not found', { status: 404 });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const env = {
+      UPSTREAM_BASE_URL: 'https://workshop.codes',
+      UPSTREAM_ARTICLES_PATH: '/wiki/articles.json',
+      RENDERER_VERSION: 'v1',
+      CACHE_TTL_SECONDS: '300',
+      PUBLIC_BASE_URL: 'https://md.example',
+    };
+
+    const first = await worker.fetch(
+      new Request('https://worker.test/wiki/articles/unknown-article.md'),
+      env as never,
+      ctx as never,
+    );
+    expect(first.status).toBe(404);
+    expect(first.headers.get('x-cache-status')).toBe('MISS');
+    expect(first.headers.get('cache-control')).toContain('max-age=60');
+    await first.text();
+    await flush();
+
+    const second = await worker.fetch(
+      new Request('https://worker.test/wiki/articles/unknown-article.md'),
+      env as never,
+      ctx as never,
+    );
+    expect(second.status).toBe(404);
+    expect(second.headers.get('x-cache-status')).toBe('HIT');
+    await second.text();
+    // First request: single-article 404 + list fallback. Second request: cache only.
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('never caches upstream 5xx failures', async () => {
+    stubCaches(new FakeCache());
+    const { ctx } = makeCtx();
+
+    const fetchMock = vi.fn(async () => new Response('boom', { status: 500 }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const env = {
+      UPSTREAM_BASE_URL: 'https://workshop.codes',
+      UPSTREAM_ARTICLES_PATH: '/wiki/articles.json',
+      RENDERER_VERSION: 'v1',
+      CACHE_TTL_SECONDS: '300',
+      PUBLIC_BASE_URL: 'https://md.example',
+    };
+
+    const first = await worker.fetch(
+      new Request('https://worker.test/wiki/articles/how-to-use-loops.md'),
+      env as never,
+      ctx as never,
+    );
+    expect(first.status).toBe(500);
+    expect(first.headers.get('cache-control')).toBe('no-store');
+    await first.text();
+
+    const second = await worker.fetch(
+      new Request('https://worker.test/wiki/articles/how-to-use-loops.md'),
+      env as never,
+      ctx as never,
+    );
+    expect(second.status).toBe(500);
+    expect(second.headers.get('cache-control')).toBe('no-store');
+    await second.text();
+    expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 });
