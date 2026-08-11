@@ -47,7 +47,8 @@ https://cache.local/generated?key=<pathname>::markdown::<renderer-version>
 Generation stays on demand and bounded:
 
 - `/wiki/articles.md` derives from list metadata only; it never renders or hashes article bodies.
-- When the manifest endpoint lands (#38), it must operate on list metadata only and must not render every article or compute document content hashes. Exact document hashing belongs to the exact-document fetch/render path (#39).
+- `GET /manifest.json` (#38) derives from the same list metadata only: it is a compact, deterministically ordered document list (schema version, slug, markdown/source URLs, conservative aliases) and never renders or hashes article bodies. Exact document content hashes are provided by the exact-document route below, not by the manifest.
+- Exact article routes expose a content-derived revision (`content_hash` in front matter and the `ETag`, both SHA-256 of the rendered document) and honor conditional requests (`If-None-Match` / `If-Modified-Since` → 304) per #39. Revision semantics are decoupled from Worker deployment versions: unchanged rendered content yields a stable hash even across `RENDERER_VERSION` changes.
 - No embeddings, vector indexing, background crawler, or full-Wiki materialization in this issue or its successors.
 
 ### 4. Error/cache policy

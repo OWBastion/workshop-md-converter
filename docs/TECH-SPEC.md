@@ -6,12 +6,14 @@ Primary specification sources:
 - this `docs/TECH-SPEC.md` snapshot
 
 This repository implements V1 scope:
+- `/manifest.json` (machine-readable document manifest)
 - `/wiki/articles.md`
 - `/wiki/articles/:slug.md`
 - `Accept: text/markdown` on slug path
 - minimal cleaning
 - proxy-domain `.md` link normalization (supports `PUBLIC_BASE_URL` with request-origin fallback)
 - markdown error pages
+- document revision metadata (`content_hash` in article front matter, content-derived ETag, `304` conditional requests)
 - Worker-native caching (Cache API) for upstream JSON and generated Markdown, with status-specific TTLs (see `docs/ADR-002-caching-strategy.md`)
 - tests and README
 

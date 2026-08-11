@@ -3,12 +3,49 @@ import { logRequest } from './core/logger';
 import { NOT_FOUND_CACHE_TTL_SECONDS, getCacheTtlSeconds } from './core/config';
 import type { Env } from './env';
 import { negotiateMarkdown } from './http/negotiate';
+import { maybeNotModified } from './http/conditional';
 import { buildCacheKey } from './http/cache-key';
 import { cacheLookup, cacheStore, generatedCacheUrl } from './cache/cache-api';
 import { isJsonBypass } from './routes/api';
 import { healthRoute } from './routes/health';
 import { homeRoute } from './routes/home';
+import { manifestErrorResponse, manifestRoute, resolveManifestRoute } from './routes/manifest';
 import { markdownErrorResponse, markdownRoute, resolveMarkdownRoute } from './routes/markdown';
+
+async function serveManifest(request: Request, env: Env, ctx?: ExecutionContext): Promise<Response> {
+  const startedAt = Date.now();
+  const cacheKey = buildCacheKey('/manifest.json', 'json', env.RENDERER_VERSION);
+  const cacheUrl = generatedCacheUrl(cacheKey);
+
+  const cached = await cacheLookup(cacheUrl);
+  if (cached) {
+    cached.headers.set('x-cache-key', cacheKey);
+    cached.headers.set('x-cache-status', 'HIT');
+    return maybeNotModified(request, cached) ?? cached;
+  }
+
+  try {
+    const response = await manifestRoute(request, env, ctx);
+    logRequest({
+      traceId: crypto.randomUUID(),
+      route: '/manifest.json',
+      upstreamUrl: response.headers.get('x-upstream-url') ?? undefined,
+      status: response.status,
+      cacheStatus: 'miss',
+      upstreamCache: response.headers.get('x-upstream-cache') ?? undefined,
+      transformMs: Date.now() - startedAt,
+      bytesOut: Number(response.headers.get('content-length') ?? 0),
+      rendererVersion: env.RENDERER_VERSION,
+    });
+    if (ctx) ctx.waitUntil(cacheStore(cacheUrl, response.clone(), getCacheTtlSeconds(env)));
+    response.headers.set('x-cache-key', cacheKey);
+    response.headers.set('x-cache-status', 'MISS');
+    return maybeNotModified(request, response) ?? response;
+  } catch (error) {
+    const message = error instanceof HttpError ? error.message : 'Failed to generate manifest';
+    return manifestErrorResponse(502, 'Upstream Error', message, env);
+  }
+}
 
 export default {
   async fetch(request: Request, env: Env, ctx?: ExecutionContext): Promise<Response> {
@@ -20,6 +57,11 @@ export default {
 
     const home = homeRoute(url.pathname, env);
     if (home) return home;
+
+    const manifest = resolveManifestRoute(url.pathname);
+    if (manifest.kind === 'manifest') {
+      return serveManifest(request, env, ctx);
+    }
 
     if (isJsonBypass(url.pathname)) {
       return fetch(request);
@@ -57,7 +99,7 @@ export default {
         cacheStatus: 'hit',
         rendererVersion: env.RENDERER_VERSION,
       });
-      return cached;
+      return maybeNotModified(request, cached) ?? cached;
     }
 
     try {
@@ -79,7 +121,7 @@ export default {
       if (ctx) ctx.waitUntil(cacheStore(cacheUrl, response.clone(), getCacheTtlSeconds(env)));
       response.headers.set('x-cache-key', cacheKey);
       response.headers.set('x-cache-status', 'MISS');
-      return response;
+      return maybeNotModified(request, response) ?? response;
     } catch (error) {
       if (error instanceof HttpError) {
         const response = markdownErrorResponse(

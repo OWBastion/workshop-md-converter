@@ -28,7 +28,7 @@ export function resolveMarkdownRoute(pathname: string): RouteKind {
   return { kind: 'none' };
 }
 
-function resolvePublicBaseUrl(request: Request, env: Env): string {
+export function resolvePublicBaseUrl(request: Request, env: Env): string {
   if (env.PUBLIC_BASE_URL && env.PUBLIC_BASE_URL.trim()) {
     return env.PUBLIC_BASE_URL;
   }
@@ -95,8 +95,8 @@ export async function markdownRoute(request: Request, env: Env, ctx?: ExecutionC
   }
 
   const cleaned = cleanContent(article.contentRaw, publicBaseUrl);
-  const rendered = renderArticleMarkdown({ ...article, contentMarkdown: cleaned });
-  const etag = computeEtag([article.slug, article.updatedAt ?? 'na', env.RENDERER_VERSION]);
+  const rendered = await renderArticleMarkdown({ ...article, contentMarkdown: cleaned });
+  const etag = `"${rendered.contentHash}"`;
 
   const response = markdownResponse({
     markdown: rendered.markdown,
