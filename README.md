@@ -60,6 +60,25 @@ curl https://md.owbastion.codes/wiki/articles/hero-color-reference-table \
 - The Cache API is PoP-local: entries live in the data center that served the request and are not a durable global store.
 - Generation stays on demand and bounded: the article index and manifest are metadata-only; no bulk rendering or hashing of article bodies is performed. See `docs/ADR-002-caching-strategy.md` for the full strategy.
 
+## Agent / Machine Consumers
+
+The service exposes a small, stable machine surface for coding agents. The full contract — schema, slug rules, revision/hash semantics, caching and conditional-request behavior, error handling, and compatibility guarantees — is defined in `docs/MACHINE-CONSUMER-CONTRACT.md`. The backend is model/harness-neutral: it performs no search, ranking, or embeddings; consumers implement retrieval locally against the manifest.
+
+Minimal flow:
+
+```bash
+# 1. Discover documents via the manifest (metadata only, no article bodies)
+curl -s https://md.owbastion.codes/manifest.json | jq '.documents[0]'
+
+# 2. Fetch an exact document using its markdownUrl
+curl -s https://md.owbastion.codes/wiki/articles/hero-color-reference-table.md
+
+# 3. Cache safely: the ETag is the content hash, so refetch conditionally
+curl -s -D - -o /dev/null -H 'If-None-Match: "<etag from step 2>"' \
+  https://md.owbastion.codes/wiki/articles/hero-color-reference-table.md
+# → 304 Not Modified while the document is unchanged
+```
+
 ## Maintainer Note
 
 For local development and runtime configuration, use the repository scripts and `wrangler.jsonc` as the source of truth. This README is intentionally user-focused and omits internal deployment and CI details.

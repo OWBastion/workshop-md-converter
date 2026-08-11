@@ -14,6 +14,7 @@ This repository implements V1 scope:
 - proxy-domain `.md` link normalization (supports `PUBLIC_BASE_URL` with request-origin fallback)
 - markdown error pages
 - document revision metadata (`content_hash` in article front matter, content-derived ETag, `304` conditional requests)
+- machine-consumer contract (`docs/MACHINE-CONSUMER-CONTRACT.md`) with manifest/article integration tests
 - Worker-native caching (Cache API) for upstream JSON and generated Markdown, with status-specific TTLs (see `docs/ADR-002-caching-strategy.md`)
 - tests and README
 

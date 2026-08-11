@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "documents": [
+    {
+      "title": "Hero Color Reference Table",
+      "slug": "hero-color-reference-table",
+      "markdownUrl": "https://md.example/wiki/articles/hero-color-reference-table.md",
+      "sourceUrl": "https://workshop.codes/wiki/articles/hero-color-reference-table",
+      "aliases": [
+        "Hero Color Reference Table",
+        "hero-color-reference-table"
+      ],
+      "category": "References",
+      "updatedAt": "2026-03-17T19:20:21.209Z"
+    }
+  ]
+}
